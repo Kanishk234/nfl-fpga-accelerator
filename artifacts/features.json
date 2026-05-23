@@ -1,0 +1,27 @@
+{
+  "features": [
+    "home_elo",
+    "away_elo",
+    "elo_diff",
+    "home_rest_days",
+    "away_rest_days",
+    "home_win_streak",
+    "away_win_streak",
+    "home_pts_scored_avg",
+    "away_pts_scored_avg",
+    "home_pts_allowed_avg",
+    "away_pts_allowed_avg",
+    "home_point_diff_avg",
+    "away_point_diff_avg",
+    "is_dome",
+    "week",
+    "season_progress",
+    "vegas_spread"
+  ],
+  "labels": [
+    "home_win",
+    "spread"
+  ],
+  "feature_count": 17,
+  "created_from_seasons": "2000-2024"
+}
