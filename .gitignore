@@ -1,2 +1,40 @@
 *.md
 !README.md
+.claude/
+
+# Data directories (regenerable from nflreadpy)
+data/raw/
+data/processed/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# FPGA generated outputs (huge — do not commit)
+phase4_hls/hls_project/
+phase5_fpga/vivado_project/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Vivado artifacts
+*.bit
+*.jou
+*.log
+
+# Artifacts are committed (they are sacred)
+# artifacts/ is intentionally NOT ignored
+
+# OS
+.DS_Store
+Thumbs.db

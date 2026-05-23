@@ -1,0 +1,11 @@
+nflreadpy
+pandas
+numpy
+scikit-learn
+tensorflow>=2.13
+keras
+pyarrow
+pytest
+matplotlib
+seaborn
+jupyter
