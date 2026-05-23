@@ -141,9 +141,12 @@ def add_game_context(games_df):
     Add game-level context features that don't require per-team history.
 
     Features added:
-        is_dome        — 1 if game played in dome/closed roof
+        is_dome         — 1 if game played in dome/closed roof
         season_progress — week / 18.0, float in [0,1]
-        vegas_spread   — opening Vegas spread line (home-favored = negative)
+        vegas_spread    — opening Vegas spread line
+        temp            — game-time temperature in °F (dome/missing → 65)
+        wind            — wind speed in mph (dome/missing → 0)
+        is_div_game     — 1 if home and away teams are in the same division
     """
     games_df = games_df.copy()
 
@@ -156,5 +159,31 @@ def add_game_context(games_df):
     # Vegas opening spread — strongest single predictor available
     # Using spread_line (opening) not closing line; fill missing with 0 (neutral prior)
     games_df['vegas_spread'] = games_df['spread_line'].fillna(0.0)
+
+    # Temperature — dome games are climate-controlled (~65°F); fill outdoor nulls with median
+    # [why: high wind and cold weather suppress scoring and tighten spreads]
+    if 'temp' in games_df.columns:
+        outdoor_temp_median = games_df.loc[games_df['is_dome'] == 0, 'temp'].median()
+        if pd.isna(outdoor_temp_median):
+            outdoor_temp_median = 65.0
+        games_df['temp'] = games_df['temp'].fillna(
+            games_df['is_dome'].map({1: 65.0, 0: outdoor_temp_median})
+        )
+    else:
+        games_df['temp'] = 65.0
+
+    # Wind speed — zero for dome games and missing outdoor games
+    if 'wind' in games_df.columns:
+        games_df['wind'] = games_df['wind'].fillna(0.0)
+        # Dome games have no wind regardless of what data says
+        games_df.loc[games_df['is_dome'] == 1, 'wind'] = 0.0
+    else:
+        games_df['wind'] = 0.0
+
+    # Divisional game — division rivals know each other well; games tend to be tighter
+    if 'div_game' in games_df.columns:
+        games_df['is_div_game'] = games_df['div_game'].fillna(0).astype(int)
+    else:
+        games_df['is_div_game'] = 0
 
     return games_df

@@ -78,6 +78,7 @@ def load_and_filter(schedules):
         'game_id', 'season', 'week', 'home_team', 'away_team',
         'home_score', 'away_score', 'location', 'roof',
         'spread_line', 'total_line', 'gameday',
+        'temp', 'wind', 'div_game',
     ]
     # Only keep columns that actually exist in the dataset
     keep_cols = [c for c in keep_cols if c in games.columns]

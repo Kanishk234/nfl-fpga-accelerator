@@ -195,12 +195,12 @@ def games_df():
 
 
 class TestFeatureCount:
-    def test_exactly_17_feature_columns(self, games_df):
-        """Output DataFrame must contain exactly the 17 canonical feature columns."""
+    def test_exactly_20_feature_columns(self, games_df):
+        """Output DataFrame must contain exactly the 20 canonical feature columns."""
         for feature in CANONICAL_FEATURES:
             assert feature in games_df.columns, f"Missing feature: {feature}"
-        assert len(CANONICAL_FEATURES) == 17, \
-            f"CANONICAL_FEATURES has {len(CANONICAL_FEATURES)} entries, expected 17"
+        assert len(CANONICAL_FEATURES) == 20, \
+            f"CANONICAL_FEATURES has {len(CANONICAL_FEATURES)} entries, expected 20"
 
 
 class TestNoNulls:
@@ -262,8 +262,8 @@ class TestFeaturesJson:
         with open('artifacts/features.json') as f:
             meta = json.load(f)
         assert 'features' in meta, "features.json missing 'features' key"
-        assert len(meta['features']) == 17, \
-            f"features.json has {len(meta['features'])} features, expected 17"
+        assert len(meta['features']) == 20, \
+            f"features.json has {len(meta['features'])} features, expected 20"
 
     def test_features_json_order_matches_canonical(self):
         with open('artifacts/features.json') as f:

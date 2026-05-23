@@ -16,12 +16,15 @@
     "is_dome",
     "week",
     "season_progress",
-    "vegas_spread"
+    "vegas_spread",
+    "temp",
+    "wind",
+    "is_div_game"
   ],
   "labels": [
     "home_win",
     "spread"
   ],
-  "feature_count": 17,
+  "feature_count": 20,
   "created_from_seasons": "2000-2024"
 }
