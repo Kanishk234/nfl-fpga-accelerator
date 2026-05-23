@@ -26,10 +26,11 @@ def build_model(n_features: int) -> keras.Model:
     inputs = keras.Input(shape=(n_features,), name='features')
 
     # Shared feature extraction layers
-    # 17 inputs × 128 neurons = 2,176 weights — still well within Basys 3 BRAM budget
-    # Increased from 64 to 128 to give more capacity for spread regression
+    # Dropout(0.2) is training-only — stripped at inference time, zero FPGA impact
     x = keras.layers.Dense(128, activation='relu', name='dense_1')(inputs)
+    x = keras.layers.Dropout(0.2, name='drop_1')(x)
     x = keras.layers.Dense(64, activation='relu', name='dense_2')(x)
+    x = keras.layers.Dropout(0.2, name='drop_2')(x)
     x = keras.layers.Dense(32, activation='relu', name='dense_3')(x)
 
     # Win probability head — sigmoid outputs [0, 1], interpretable as probability
@@ -55,12 +56,14 @@ def compile_model(model: keras.Model) -> keras.Model:
         optimizer=keras.optimizers.Adam(learning_rate=0.001),
         loss={
             'win':    'binary_crossentropy',
-            'spread': 'mean_absolute_error',  # MAE loss directly minimises the MAE metric
-                                               # MSE over-penalises blowouts, pulling preds to centre
+            'spread': keras.losses.Huber(delta=1.0),
+            # Huber(delta=1): MAE-like for large errors (blowouts), MSE-like for small errors
+            # (close games). Stronger gradient signal near zero than pure MAE, more robust
+            # to outliers than pure MSE. FPGA-safe — loss is training-only.
         },
         loss_weights={
             'win':    1.0,
-            'spread': 0.15,  # MAE values are smaller than MSE, so weight bumped to compensate
+            'spread': 0.15,
         },
         metrics={
             'win':    ['accuracy', 'AUC'],
