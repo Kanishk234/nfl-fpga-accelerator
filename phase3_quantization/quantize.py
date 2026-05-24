@@ -31,6 +31,7 @@ from phase3_quantization.evaluate_quantized import (
     run_sample_comparison,
     save_quantization_report,
 )
+from phase3_quantization.verify_hls_ready import verify_hls_ready
 
 
 def transfer_weights(fp32_model, qkeras_model):
@@ -152,12 +153,17 @@ if __name__ == '__main__':
     run_sample_comparison(fp32_model, qkeras_model, X_val)
 
     # 9. Save report
-    save_quantization_report(post_metrics, bit_config={
+    bit_config = {
         'kernel':        '<8,0>',
         'bias':          '<16,6>',
         'activation':    '<8,4>',
         'output_win':    'float32 (unquantized)',
         'output_spread': 'float32 (unquantized)',
-    })
+    }
+    report = save_quantization_report(post_metrics, bit_config=bit_config)
+
+    # 10. hls4ml readiness checks — must all pass before Phase 4
+    print("\n=== hls4ml Readiness Checks ===")
+    verify_hls_ready(qkeras_model, report)
 
     print("\n=== Phase 3 Complete ===")
