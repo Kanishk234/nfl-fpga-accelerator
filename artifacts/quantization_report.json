@@ -13,5 +13,15 @@
   "q_spread_mae": 9.7487,
   "mean_prob_delta": 0.0182,
   "within_tolerance": true,
-  "ready_for_phase4": true
+  "ready_for_phase4": true,
+  "hls4ml_ready": true,
+  "hls4ml_checks": {
+    "layer_types": "PASS",
+    "activations": "PASS",
+    "bit_widths": "PASS",
+    "no_dropout": "PASS",
+    "resource_estimate": "NOTE"
+  },
+  "est_dsps_unrolled": 13218,
+  "recommended_reuse_factor": 147
 }
