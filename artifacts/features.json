@@ -19,12 +19,13 @@
     "vegas_spread",
     "temp",
     "wind",
-    "is_div_game"
+    "is_div_game",
+    "vegas_total"
   ],
   "labels": [
     "home_win",
     "spread"
   ],
-  "feature_count": 20,
+  "feature_count": 21,
   "created_from_seasons": "2000-2024"
 }

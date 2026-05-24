@@ -144,6 +144,7 @@ def add_game_context(games_df):
         is_dome         — 1 if game played in dome/closed roof
         season_progress — week / 18.0, float in [0,1]
         vegas_spread    — opening Vegas spread line
+        vegas_total     — opening Vegas over/under total points line
         temp            — game-time temperature in °F (dome/missing → 65)
         wind            — wind speed in mph (dome/missing → 0)
         is_div_game     — 1 if home and away teams are in the same division
@@ -159,6 +160,18 @@ def add_game_context(games_df):
     # Vegas opening spread — strongest single predictor available
     # Using spread_line (opening) not closing line; fill missing with 0 (neutral prior)
     games_df['vegas_spread'] = games_df['spread_line'].fillna(0.0)
+
+    # Vegas opening total (over/under) — encodes the expected scoring environment,
+    # which is signal orthogonal to the spread: spread says who wins, total says how
+    # high-scoring the game is. Together they pin each team's expected points, which
+    # helps the spread-regression head. Missing (mostly pre-2007) → median total.
+    if 'total_line' in games_df.columns:
+        total_median = games_df['total_line'].median()
+        if pd.isna(total_median):
+            total_median = 44.0  # league-typical NFL game total
+        games_df['vegas_total'] = games_df['total_line'].fillna(total_median)
+    else:
+        games_df['vegas_total'] = 44.0
 
     # Temperature — dome games are climate-controlled (~65°F); fill outdoor nulls with median
     # [why: high wind and cold weather suppress scoring and tighten spreads]

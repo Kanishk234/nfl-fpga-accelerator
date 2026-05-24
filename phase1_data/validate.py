@@ -10,9 +10,13 @@ Modifying this list after synthesis requires full re-synthesis.
 import json
 import os
 
-# 20 features — fixed forever once FPGA synthesis begins (Phase 4)
+# 21 features — fixed forever once FPGA synthesis begins (Phase 4)
 # Order is sacred: FPGA input byte N = CANONICAL_FEATURES[N]
 # Added in v2: temp, wind, is_div_game (weather + divisional context)
+# Added in v3: vegas_total (expected scoring environment, orthogonal to spread)
+# v4 candidate (QB rolling EPA/CPOE) tested and reverted — pre-2016 cold-start zeros
+#   injected noise that hurt AUC by ~2× noise band; net neutral/negative.
+# New features are always appended so existing byte offsets never shift.
 CANONICAL_FEATURES = [
     'home_elo',
     'away_elo',
@@ -34,6 +38,7 @@ CANONICAL_FEATURES = [
     'temp',
     'wind',
     'is_div_game',
+    'vegas_total',
 ]
 
 LABEL_COLUMNS = ['home_win', 'spread']
@@ -68,7 +73,7 @@ def validate_and_lock_features(games_df):
         "is_dome contains values other than 0 and 1"
 
     # Confirm feature count has not drifted
-    assert len(CANONICAL_FEATURES) == 20, \
+    assert len(CANONICAL_FEATURES) == 21, \
         f"Feature count changed to {len(CANONICAL_FEATURES)} — re-check FPGA implications"
 
     print(f"Validation passed: {len(games_df)} games, {len(CANONICAL_FEATURES)} features")
