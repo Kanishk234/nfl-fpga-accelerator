@@ -109,12 +109,29 @@ def fit_and_save_scaler(X_train, X_val, X_test):
 # Training
 # ---------------------------------------------------------------------------
 
-def train_model(model, X_train, X_val, y_train, y_val):
+def compute_recency_weights(train_seasons, min_weight=0.25):
+    """
+    Linear sample weights by season: oldest season → min_weight, newest → 1.0.
+
+    The NFL has shifted dramatically toward pass-heavy offense since ~2015 (rule
+    changes, OPI enforcement). Upweighting recent seasons makes the model tune to
+    modern patterns, which are more predictive of 2021–2022 validation games.
+    min_weight=0.25 means 2000 games count 1/4 as much as 2020 games.
+    """
+    s_min, s_max = train_seasons.min(), train_seasons.max()
+    if s_min == s_max:
+        return np.ones(len(train_seasons))
+    norm = (train_seasons - s_min) / (s_max - s_min)  # 0.0 → 1.0
+    return norm * (1.0 - min_weight) + min_weight       # min_weight → 1.0
+
+
+def train_model(model, X_train, X_val, y_train, y_val, sample_weight=None):
     """
     Train with EarlyStopping, ModelCheckpoint, and ReduceLROnPlateau.
 
     patience=15: NFL tabular models converge slowly; patience=5 stops too early.
     200 epochs max: EarlyStopping terminates well before this in practice.
+    sample_weight: optional 1-D array (one weight per training sample).
     """
     os.makedirs('artifacts', exist_ok=True)
     os.makedirs('notebooks', exist_ok=True)
@@ -144,6 +161,7 @@ def train_model(model, X_train, X_val, y_train, y_val):
     history = model.fit(
         X_train,
         y_train,
+        sample_weight=sample_weight,
         validation_data=(X_val, y_val),
         epochs=200,
         batch_size=32,
@@ -195,6 +213,12 @@ def plot_training_history(history):
 
 if __name__ == '__main__':
     print("=== Phase 2: Model Training ===\n")
+
+    # Fixed seed so the committed model_best.keras is reproducible. Single-run
+    # accuracy has ~1pt variance from random init/shuffling; pinning the seed
+    # makes retrains deterministic. Use eval_repeated.py (multi-seed) to judge
+    # whether a feature/architecture change is a real gain vs run-to-run noise.
+    keras.utils.set_random_seed(42)
 
     # 1. Load and split data
     (X_train, X_val, X_test,
