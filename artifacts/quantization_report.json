@@ -1,0 +1,17 @@
+{
+  "bit_config": {
+    "kernel": "<8,0>",
+    "bias": "<16,6>",
+    "activation": "<8,4>",
+    "output_win": "float32 (unquantized)",
+    "output_spread": "float32 (unquantized)"
+  },
+  "fp_win_accuracy": 0.6446,
+  "q_win_accuracy": 0.6464,
+  "accuracy_drop": -0.0018,
+  "fp_spread_mae": 9.738,
+  "q_spread_mae": 9.7487,
+  "mean_prob_delta": 0.0182,
+  "within_tolerance": true,
+  "ready_for_phase4": true
+}
