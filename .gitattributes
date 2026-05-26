@@ -1,0 +1,11 @@
+# Tell GitHub Linguist to exclude generated/vendored code from language stats.
+# Files are still fully visible and cloneable — this only affects the % bar.
+
+# hls4ml MLP IP — generated VHDL + Verilog from Vitis HLS, not hand-written
+artifacts/ip_repo/**        linguist-vendored
+
+# hls4ml library patches — modified copies of third-party C++ templates
+phase4_hls/patches/**       linguist-vendored
+
+# iverilog stub — exists only for syntax checking, not real HDL
+phase5_fpga/hdl/myproject_stub.v  linguist-generated
