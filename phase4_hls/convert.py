@@ -126,13 +126,13 @@ def build_hls_config(model, reuse_factor=None):
     """
     config = hls4ml.utils.config_from_keras_model(model, granularity='name')
 
-    # Widen the global default so all intermediate types (pre-relu outputs, accumulators,
-    # input type) get more fractional precision — reduces accumulated rounding error.
-    # fixed<W,I>: fractional bits = W-I. Increasing I steals from fractional bits (worse).
-    # fixed<16,6>: 10 fractional bits → 128-step error ≈ 0.064 (too large).
-    # fixed<24,10>: 14 fractional bits → 128-step error ≈ 0.004. Range ±512 covers
-    # intermediate partial sums (worst-case one-sided dense_2 sum ≈ ±165).
-    config['Model']['Precision']['default'] = 'fixed<24,10>'
+    # Global default controls all intermediate types (accumulators, pre-relu outputs, input type).
+    # fixed<W,I>: fractional bits = W-I. Need ≥12 frac bits to keep 128-step error < 0.05.
+    #   fixed<16,6>: 10 frac bits → error ≈ 0.125 — too large, C sim fails.
+    #   fixed<18,6>: 12 frac bits → error ≈ 0.031. Range ±32 covers pre-relu sums. LUT target.
+    #   fixed<24,10>: 14 frac bits → error ≈ 0.008. Was previous value; costs ~20-30% more LUT.
+    # Fallback: if C sim mean_delta > 0.05, try fixed<20,8> (12 frac bits, ±128 range).
+    config['Model']['Precision']['default'] = 'fixed<18,6>'
 
     # Use Resource strategy so hls4ml emits dense_resource (serialized MACs over RF cycles)
     # instead of dense_latency (all MACs in one cycle). Without this, ReuseFactor is ignored
