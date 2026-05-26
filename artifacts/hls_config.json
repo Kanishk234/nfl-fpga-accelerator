@@ -1,0 +1,21 @@
+{
+  "reuse_factor": {
+    "dense_1": 168,
+    "dense_2": 512,
+    "dense_3": 512,
+    "win": 32,
+    "spread": 32
+  },
+  "backend": "Vitis",
+  "part": "xc7a35tcpg236-1",
+  "clock_period": 10,
+  "io_type": "io_parallel",
+  "win_result_t": "ap_fixed<8,1>",
+  "spread_result_t": "ap_fixed<16,7>",
+  "model_source": "model_quantized.keras (QAT weights snapped to fixed-point grid)",
+  "bit_widths": {
+    "kernel": "<8,1>",
+    "bias": "<16,7>",
+    "activation": "<8,4>"
+  }
+}
