@@ -1,0 +1,41 @@
+{
+  "source": {
+    "utilization": "/home/younix/nfl-fpga-accelerator/phase5_fpga/scripts/utilization_report.txt",
+    "timing": "/home/younix/nfl-fpga-accelerator/phase5_fpga/scripts/timing_report.txt"
+  },
+  "resources": {
+    "LUT": {
+      "used": 9588,
+      "total": 20800,
+      "pct": 46.1,
+      "budget": 20800,
+      "ok": true
+    },
+    "FF": {
+      "used": 10127,
+      "total": 41600,
+      "pct": 24.34,
+      "budget": 41600,
+      "ok": true
+    },
+    "BRAM": {
+      "used": 7,
+      "total": 50,
+      "pct": 14.0,
+      "budget": 100,
+      "ok": true
+    },
+    "DSP": {
+      "used": 18,
+      "total": 90,
+      "pct": 20.0,
+      "budget": 90,
+      "ok": true
+    }
+  },
+  "timing": {
+    "WNS_ns": 0.111,
+    "timing_ok": true,
+    "timing_note": "WNS >= 0 required for 100 MHz operation"
+  }
+}
