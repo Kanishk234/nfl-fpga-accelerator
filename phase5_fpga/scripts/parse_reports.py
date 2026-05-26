@@ -22,11 +22,13 @@ TARGETS = {
 def parse_utilization(path: Path) -> dict:
     result = {}
     text = path.read_text()
+    # Report format: | Name | Used | Fixed | Available | Util% |
+    # Skip the Fixed column with an extra [^|]* group.
     patterns = {
-        "LUT":  r"\|\s*Slice LUTs\s*\|\s*(\d[\d,]*)\s*\|[^|]*\|\s*(\d[\d,]*)",
-        "FF":   r"\|\s*Slice Registers\s*\|\s*(\d[\d,]*)\s*\|[^|]*\|\s*(\d[\d,]*)",
-        "BRAM": r"\|\s*Block RAM Tile\s*\|\s*(\d[\d,]*)\s*\|[^|]*\|\s*(\d[\d,]*)",
-        "DSP":  r"\|\s*DSPs\s*\|\s*(\d[\d,]*)\s*\|[^|]*\|\s*(\d[\d,]*)",
+        "LUT":  r"\|\s*Slice LUTs\s*\|\s*(\d[\d,]*)\s*\|[^|]*\|[^|]*\|\s*(\d[\d,]*)",
+        "FF":   r"\|\s*Slice Registers\s*\|\s*(\d[\d,]*)\s*\|[^|]*\|[^|]*\|\s*(\d[\d,]*)",
+        "BRAM": r"\|\s*Block RAM Tile\s*\|\s*(\d[\d,]*)\s*\|[^|]*\|[^|]*\|\s*(\d[\d,]*)",
+        "DSP":  r"\|\s*DSPs\s*\|\s*(\d[\d,]*)\s*\|[^|]*\|[^|]*\|\s*(\d[\d,]*)",
     }
     for resource, pat in patterns.items():
         m = re.search(pat, text)

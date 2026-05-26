@@ -1,16 +1,17 @@
 # create_project.tcl — Creates the Vivado project for the NFL FPGA Accelerator.
 # Run from the Vivado Tcl console on Windows:
-#   source C:/path/to/phase5_fpga/scripts/create_project.tcl
+#   source {//wsl.localhost/Ubuntu/home/younix/nfl-fpga-accelerator/phase5_fpga/scripts/create_project.tcl}
 #
-# Adjust the three path variables below to match your machine.
+# REPO_ROOT points to the WSL repo via the Windows UNC path.
+# The IP zip has already been extracted to artifacts/ip_repo/ in WSL — no unzip needed here.
 
 # -----------------------------------------------------------------------
-# USER-CONFIGURABLE PATHS (edit these before running)
+# USER-CONFIGURABLE PATHS
 # -----------------------------------------------------------------------
-# Windows path to the nfl-fpga-accelerator repo root (use forward slashes)
-set REPO_ROOT   "C:/Users/kanis/nfl-fpga-accelerator"
+# WSL repo root — accessible from Windows Vivado via UNC path (forward slashes)
+set REPO_ROOT   "//wsl.localhost/Ubuntu/home/younix/nfl-fpga-accelerator"
 
-# Where Vivado should create the project (must not be inside the repo)
+# Where Vivado creates the project — must be a Windows-native path (not WSL)
 set PROJECT_DIR "C:/nfl_fpga_build"
 
 # -----------------------------------------------------------------------
@@ -19,8 +20,7 @@ set PROJECT_DIR "C:/nfl_fpga_build"
 set PROJECT_NAME nfl_fpga_accelerator
 set HDL_DIR      "$REPO_ROOT/phase5_fpga/hdl"
 set XDC_FILE     "$REPO_ROOT/phase5_fpga/constraints/basys3.xdc"
-set IP_ZIP       "$REPO_ROOT/artifacts/xilinx_com_hls_myproject_1_0.zip"
-set IP_REPO_DIR  "$PROJECT_DIR/ip_repo"
+set IP_REPO_DIR  "$REPO_ROOT/artifacts/ip_repo"
 
 # -----------------------------------------------------------------------
 # PROJECT CREATION
@@ -28,13 +28,15 @@ set IP_REPO_DIR  "$PROJECT_DIR/ip_repo"
 create_project $PROJECT_NAME $PROJECT_DIR -part xc7a35tcpg236-1 -force
 
 # -----------------------------------------------------------------------
-# ADD IP FROM PHASE 4
-# Import the hls4ml IP zip into a local IP repository directory.
+# ADD MLP IP SOURCE FILES DIRECTLY
+# The IP was pre-extracted from artifacts/xilinx_com_hls_myproject_1_0.zip
+# into artifacts/ip_repo/. Add the Verilog files directly — this avoids
+# the IP catalog output-product-generation step that causes "module not found".
+# The .dat files (ROM init data) are added alongside the .v files so
+# synthesis can locate them via $readmemh.
 # -----------------------------------------------------------------------
-file mkdir $IP_REPO_DIR
-exec unzip -o $IP_ZIP -d $IP_REPO_DIR
-set_property ip_repo_paths $IP_REPO_DIR [current_project]
-update_ip_catalog -rebuild
+add_files -norecurse [glob $IP_REPO_DIR/hdl/verilog/*.v]
+add_files -norecurse [glob $IP_REPO_DIR/hdl/verilog/*.dat]
 
 # -----------------------------------------------------------------------
 # ADD HDL SOURCES
