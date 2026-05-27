@@ -1,0 +1,9 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1779897452" />
+    <testcase name="test_full_round_trip_known_values" classname="test_top_integration" file="/home/younix/nfl-fpga-accelerator/phase6_sim/cocotb/test_top_integration.py" lineno="72" time="11.266892433166504" sim_time_ns="2335440.0" ratio_time="207283.42032672057" />
+    <testcase name="test_checksum_error_response" classname="test_top_integration" file="/home/younix/nfl-fpga-accelerator/phase6_sim/cocotb/test_top_integration.py" lineno="93" time="12.216604948043823" sim_time_ns="2335190.0" ratio_time="191148.85108680878" />
+    <testcase name="test_back_to_back_inferences" classname="test_top_integration" file="/home/younix/nfl-fpga-accelerator/phase6_sim/cocotb/test_top_integration.py" lineno="110" time="23.211095571517944" sim_time_ns="4670740.0" ratio_time="201228.76085743273" />
+    <testcase name="test_reset_clears_state" classname="test_top_integration" file="/home/younix/nfl-fpga-accelerator/phase6_sim/cocotb/test_top_integration.py" lineno="137" time="16.633256196975708" sim_time_ns="3290330.0" ratio_time="197816.34822640766" />
+  </testsuite>
+</testsuites>

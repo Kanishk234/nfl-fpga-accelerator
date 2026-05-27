@@ -1,0 +1,8 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1779897446" />
+    <testcase name="test_tx_idle_line" classname="test_uart_tx" file="/home/younix/nfl-fpga-accelerator/phase6_sim/cocotb/test_uart_tx.py" lineno="44" time="0.002256631851196289" sim_time_ns="60.0" ratio_time="26588.29793977813" />
+    <testcase name="test_transmit_byte" classname="test_uart_tx" file="/home/younix/nfl-fpga-accelerator/phase6_sim/cocotb/test_uart_tx.py" lineno="52" time="0.395491361618042" sim_time_ns="86890.0" ratio_time="219701.3852452148" />
+    <testcase name="test_busy_prevents_new_tx" classname="test_uart_tx" file="/home/younix/nfl-fpga-accelerator/phase6_sim/cocotb/test_uart_tx.py" lineno="80" time="0.3869307041168213" sim_time_ns="87390.00000000001" ratio_time="225854.39477973143" />
+  </testsuite>
+</testsuites>
