@@ -132,7 +132,10 @@ module uart_framing (
                 end
 
                 TX_WIN: begin
-                    if (!tx_busy) begin
+                    // Guard !tx_start: uart_tx's busy register takes 1 clock to rise
+                    // after start is seen; without this, TX_WIN fires while uart_tx
+                    // is still processing the previous tx_start pulse.
+                    if (!tx_busy && !tx_start) begin
                         tx_data  <= tx_win_lat;
                         tx_start <= 1'b1;
                         tx_state <= TX_SPREAD;
@@ -140,7 +143,7 @@ module uart_framing (
                 end
 
                 TX_SPREAD: begin
-                    if (!tx_busy) begin
+                    if (!tx_busy && !tx_start) begin
                         tx_data  <= tx_spread_lat;
                         tx_start <= 1'b1;
                         tx_state <= TX_STATUS;
@@ -148,7 +151,7 @@ module uart_framing (
                 end
 
                 TX_STATUS: begin
-                    if (!tx_busy) begin
+                    if (!tx_busy && !tx_start) begin
                         tx_data  <= tx_status_lat;
                         tx_start <= 1'b1;
                         tx_state <= TX_WAIT;
