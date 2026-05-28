@@ -35,6 +35,10 @@ notebooks/.ipynb_checkpoints/
 # Artifacts are committed (they are sacred)
 # artifacts/ is intentionally NOT ignored
 
+# Phase 6 simulation — generated files (all regenerable)
+phase6_sim/cocotb/sim_build/        # compiled iverilog binaries
+phase6_sim/cocotb/results*.xml      # cocotb test result XMLs
+
 # OS
 .DS_Store
 Thumbs.db
