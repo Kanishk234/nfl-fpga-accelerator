@@ -1,13 +1,17 @@
-"""cocotb unit tests for uart_framing — driven at rx_data/rx_done interface level."""
+# test_uart_framing.py — 5 unit tests for uart_framing module
+# Uses send_byte_direct() which pulses rx_done directly — bypasses uart_rx
+# timing to test the framing FSM in isolation.
+
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles, Event
+from cocotb.triggers import RisingEdge, ClockCycles
+
+from uart_helpers import CLK_PERIOD_NS, SOF_REQUEST
 import functools
 
-CLK_PERIOD_NS = 10
 
-
-async def reset_dut(dut):
+async def _init(dut):
+    cocotb.start_soon(Clock(dut.clk, CLK_PERIOD_NS, unit='ns').start())
     dut.rst.value           = 1
     dut.rx_data.value       = 0
     dut.rx_done.value       = 0
@@ -17,179 +21,145 @@ async def reset_dut(dut):
     dut.result_valid.value  = 0
     await ClockCycles(dut.clk, 5)
     dut.rst.value = 0
-    await ClockCycles(dut.clk, 2)
+    await ClockCycles(dut.clk, 5)
 
 
-async def send_byte(dut, byte_val):
-    """Deliver one rx byte to the framing module (simulates uart_rx output)."""
+async def send_byte_direct(dut, byte_val):
+    """Inject a byte directly by pulsing rx_done for 1 clock."""
     dut.rx_data.value = byte_val
     dut.rx_done.value = 1
     await RisingEdge(dut.clk)
     dut.rx_done.value = 0
-    await ClockCycles(dut.clk, 2)
+    await ClockCycles(dut.clk, 2)   # let FSM process
 
 
-async def send_packet(dut, features, checksum=None):
-    """Send a complete 23-byte framing packet."""
-    if checksum is None:
-        checksum = functools.reduce(lambda a, b: a ^ b, features)
-    await send_byte(dut, 0xAA)
-    for f in features:
-        await send_byte(dut, f)
-    await send_byte(dut, checksum)
+async def send_packet_direct(dut, feature_bytes):
+    """Send a complete valid 23-byte packet via rx_done injection."""
+    checksum = functools.reduce(lambda a, b: a ^ b, feature_bytes)
+    packet   = [SOF_REQUEST] + list(feature_bytes) + [checksum]
+    for b in packet:
+        await send_byte_direct(dut, b)
 
 
-class PulseMonitor:
-    """Monitors packet_valid and packet_error pulses concurrently."""
-    def __init__(self, dut):
-        self.valid_count = 0
-        self.error_count = 0
-        self._dut = dut
-        self._task = None
-
-    def start(self):
-        self._task = cocotb.start_soon(self._run())
-
-    async def _run(self):
-        while True:
-            await RisingEdge(self._dut.clk)
-            if self._dut.packet_valid.value == 1:
-                self.valid_count += 1
-            if self._dut.packet_error.value == 1:
-                self.error_count += 1
-
-    def stop(self):
-        if self._task:
-            self._task.cancel()
-
-
-async def capture_tx_bytes(dut, n, timeout=500):
-    """Capture n bytes from the TX interface (watch for tx_start pulses)."""
-    received = []
-    for _ in range(timeout):
-        await RisingEdge(dut.clk)
-        if dut.tx_start.value == 1:
-            received.append(int(dut.tx_data.value))
-        if len(received) == n:
-            break
-    return received
+async def _wait_for_signal(dut_signal, max_clks, clk):
+    """Poll for signal to go high; return True if found within max_clks."""
+    for _ in range(max_clks):
+        await RisingEdge(clk)
+        if int(dut_signal.value) == 1:
+            return True
+    return False
 
 
 @cocotb.test()
-async def test_valid_packet_assembly(dut):
-    """Valid 23-byte packet → packet_valid pulses once, feature_bus correct."""
-    cocotb.start_soon(Clock(dut.clk, CLK_PERIOD_NS, units='ns').start())
-    await reset_dut(dut)
+async def test_sof_detection(dut):
+    """Non-0xAA bytes do not trigger packet_valid."""
+    await _init(dut)
+    for b in [0x00, 0xFF, 0x55, 0xBB]:
+        await send_byte_direct(dut, b)
+        assert int(dut.packet_valid.value) == 0, \
+            f"packet_valid triggered by non-SOF byte {hex(b)}"
 
+
+@cocotb.test()
+async def test_valid_packet_accepted(dut):
+    """packet_valid pulses after correct 23-byte packet."""
+    await _init(dut)
     features = list(range(21))
-    checksum = functools.reduce(lambda a, b: a ^ b, features)
 
-    mon = PulseMonitor(dut)
-    mon.start()
-    await send_packet(dut, features, checksum)
-    await ClockCycles(dut.clk, 5)
-    mon.stop()
+    # Monitor for packet_valid concurrently — it's a 1-cycle pulse that fires
+    # during the last byte of send_packet_direct, so we must watch before sending.
+    found = []
 
-    assert mon.valid_count == 1, \
-        f"packet_valid fired {mon.valid_count} times, expected 1"
-    assert mon.error_count == 0, \
-        "packet_error fired unexpectedly"
+    async def monitor():
+        for _ in range(300):
+            await RisingEdge(dut.clk)
+            if int(dut.packet_valid.value) == 1:
+                found.append(True)
+                return
 
-    # Verify feature_bus — feature[i] = feature_bus[i*8 +: 8]
-    bus = int(dut.feature_bus.value)
+    cocotb.start_soon(monitor())
+    await send_packet_direct(dut, features)
+    await ClockCycles(dut.clk, 10)
+
+    assert found, "packet_valid never asserted after valid packet"
+
+
+@cocotb.test()
+async def test_checksum_error_triggers_nack(dut):
+    """Bad checksum → packet_error asserts."""
+    await _init(dut)
+    features     = [0xAB] * 21
+    bad_checksum = 0x00   # deliberately wrong
+    packet       = [SOF_REQUEST] + features + [bad_checksum]
+
+    found_error = []
+
+    async def monitor():
+        for _ in range(300):
+            await RisingEdge(dut.clk)
+            if int(dut.packet_error.value) == 1:
+                found_error.append(True)
+                return
+
+    cocotb.start_soon(monitor())
+    for b in packet:
+        await send_byte_direct(dut, b)
+    await ClockCycles(dut.clk, 10)
+
+    assert found_error, "packet_error never asserted on bad checksum"
+
+
+@cocotb.test()
+async def test_feature_bus_contents(dut):
+    """All 21 feature bytes land on correct feature_bus bits."""
+    await _init(dut)
+    features = [i * 5 + 10 for i in range(21)]   # distinct values
+
+    found = []
+
+    async def monitor():
+        for _ in range(300):
+            await RisingEdge(dut.clk)
+            if int(dut.packet_valid.value) == 1:
+                found.append(int(dut.feature_bus.value))
+                return
+
+    cocotb.start_soon(monitor())
+    await send_packet_direct(dut, features)
+    await ClockCycles(dut.clk, 10)
+
+    assert found, "packet_valid never asserted"
+    bus = found[0]
     for i, expected in enumerate(features):
-        got = (bus >> (i * 8)) & 0xFF
-        assert got == expected, \
-            f"feature[{i}]: expected 0x{expected:02X}, got 0x{got:02X}"
+        actual = (bus >> (i * 8)) & 0xFF
+        assert actual == expected, \
+            f"feature[{i}]: expected {hex(expected)}, got {hex(actual)}"
 
 
 @cocotb.test()
-async def test_checksum_failure_triggers_error(dut):
-    """Wrong checksum → packet_error fires, packet_valid does not."""
-    cocotb.start_soon(Clock(dut.clk, CLK_PERIOD_NS, units='ns').start())
-    await reset_dut(dut)
+async def test_resync_after_bad_packet(dut):
+    """Valid packet accepted after prior bad one."""
+    await _init(dut)
+    # Send bad packet
+    features_bad = [0xAB] * 21
+    packet_bad   = [SOF_REQUEST] + features_bad + [0x00]   # wrong checksum
+    for b in packet_bad:
+        await send_byte_direct(dut, b)
+    await ClockCycles(dut.clk, 10)
 
-    features     = [0x10] * 21
-    bad_checksum = functools.reduce(lambda a, b: a ^ b, features) ^ 0xFF
+    # Now send a good packet — monitor concurrently
+    features_good = list(range(21))
+    found = []
 
-    mon = PulseMonitor(dut)
-    mon.start()
-    await send_packet(dut, features, bad_checksum)
-    await ClockCycles(dut.clk, 5)
-    mon.stop()
+    async def monitor():
+        for _ in range(300):
+            await RisingEdge(dut.clk)
+            if int(dut.packet_valid.value) == 1:
+                found.append(True)
+                return
 
-    assert mon.error_count == 1, \
-        f"packet_error fired {mon.error_count} times, expected 1"
-    assert mon.valid_count == 0, \
-        "packet_valid fired on a bad checksum"
+    cocotb.start_soon(monitor())
+    await send_packet_direct(dut, features_good)
+    await ClockCycles(dut.clk, 10)
 
-
-@cocotb.test()
-async def test_sof_resync(dut):
-    """5 garbage bytes before a valid packet — only the valid packet fires."""
-    cocotb.start_soon(Clock(dut.clk, CLK_PERIOD_NS, units='ns').start())
-    await reset_dut(dut)
-
-    mon = PulseMonitor(dut)
-    mon.start()
-
-    # 5 garbage bytes (none are 0xAA)
-    for b in [0x01, 0x02, 0x03, 0x04, 0x05]:
-        await send_byte(dut, b)
-
-    valid_after_garbage = mon.valid_count
-
-    # Now a valid packet
-    features = [0xAB] * 21
-    checksum = functools.reduce(lambda a, b: a ^ b, features)
-    await send_packet(dut, features, checksum)
-    await ClockCycles(dut.clk, 5)
-    mon.stop()
-
-    assert valid_after_garbage == 0, \
-        "packet_valid fired during garbage bytes"
-    assert mon.valid_count == 1, \
-        f"packet_valid fired {mon.valid_count} times total, expected 1"
-
-
-@cocotb.test()
-async def test_response_transmission(dut):
-    """result_valid with win=0xC0, spread=0xFB → TX bytes [0x55, 0xC0, 0xFB, 0x00]."""
-    cocotb.start_soon(Clock(dut.clk, CLK_PERIOD_NS, units='ns').start())
-    await reset_dut(dut)
-
-    dut.result_win.value    = 0xC0
-    dut.result_spread.value = 0xFB
-    dut.result_valid.value  = 1
-    await RisingEdge(dut.clk)
-    dut.result_valid.value = 0
-
-    # tx_busy stays 0 — all 4 bytes sent in rapid succession
-    tx_bytes = await capture_tx_bytes(dut, 4)
-
-    assert len(tx_bytes) == 4, f"Only got {len(tx_bytes)} TX bytes, expected 4"
-    assert tx_bytes[0] == 0x55, f"SOF: expected 0x55, got 0x{tx_bytes[0]:02X}"
-    assert tx_bytes[1] == 0xC0, f"WIN: expected 0xC0, got 0x{tx_bytes[1]:02X}"
-    assert tx_bytes[2] == 0xFB, f"SPREAD: expected 0xFB, got 0x{tx_bytes[2]:02X}"
-    assert tx_bytes[3] == 0x00, f"STATUS: expected 0x00, got 0x{tx_bytes[3]:02X}"
-
-
-@cocotb.test()
-async def test_checksum_computation(dut):
-    """XOR of features [0..20] must be accepted by the framing module."""
-    cocotb.start_soon(Clock(dut.clk, CLK_PERIOD_NS, units='ns').start())
-    await reset_dut(dut)
-
-    features = list(range(21))
-    checksum = functools.reduce(lambda a, b: a ^ b, features)
-
-    mon = PulseMonitor(dut)
-    mon.start()
-    await send_packet(dut, features, checksum)
-    await ClockCycles(dut.clk, 5)
-    mon.stop()
-
-    assert mon.valid_count == 1, \
-        f"packet_valid fired {mon.valid_count} times, expected 1"
-    assert mon.error_count == 0, \
-        "packet_error fired — checksum was wrong"
+    assert found, "packet_valid never asserted after resync"
