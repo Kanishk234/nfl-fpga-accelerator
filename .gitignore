@@ -38,6 +38,8 @@ notebooks/.ipynb_checkpoints/
 # Phase 6 simulation — generated files (all regenerable)
 phase6_sim/cocotb/sim_build/
 phase6_sim/cocotb/results*.xml
+phase6_sim/test_vectors/sim_outputs.csv
+phase6_sim/test_vectors/sim_report.csv
 
 # OS
 .DS_Store
