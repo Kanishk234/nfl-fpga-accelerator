@@ -61,8 +61,13 @@ module mlp_controller (
 
     // Synchronous feature read: MLP drives ce0+address0, we respond next cycle.
     // {6'b0, byte, 4'b0} = byte placed in fractional bits [11:4] of ap_fixed<18,6>.
+    // Reset lives here, not in the main always block — two always blocks driving
+    // the same reg is illegal Verilog; Vivado resolves it by keeping the constant
+    // (GND) driver and silently discarding the read logic.
     always @(posedge clk) begin
-        if (features_ce0)
+        if (rst)
+            features_q0 <= 18'd0;
+        else if (features_ce0)
             features_q0 <= {6'b0, feature_store[features_address0], 4'b0};
     end
 
@@ -77,7 +82,6 @@ module mlp_controller (
             spread_result <= 32'd0;
             result_win   <= 8'd0;
             result_spread <= 8'd0;
-            features_q0  <= 18'd0;
             for (i = 0; i <= 20; i = i + 1)
                 feature_store[i] <= 8'd0;
         end else begin
