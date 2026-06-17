@@ -6,979 +6,794 @@
 
 `timescale 1 ns / 1 ps 
 
-(* CORE_GENERATION_INFO="myproject_myproject,hls_ip_2025_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7a35t-cpg236-1,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=others,HLS_SYN_CLOCK=10.568321,HLS_SYN_LAT=1758,HLS_SYN_TPT=none,HLS_SYN_MEM=14,HLS_SYN_DSP=0,HLS_SYN_FF=11539,HLS_SYN_LUT=16234,HLS_VERSION=2025_2}" *)
+(* CORE_GENERATION_INFO="myproject_myproject,hls_ip_2025_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7a35t-cpg236-1,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=dataflow,HLS_SYN_CLOCK=10.568321,HLS_SYN_LAT=591,HLS_SYN_TPT=587,HLS_SYN_MEM=14,HLS_SYN_DSP=0,HLS_SYN_FF=24690,HLS_SYN_LUT=28869,HLS_VERSION=2025_2}" *)
 
 (* DowngradeIPIdentifiedWarnings="yes" *)
 module myproject (
+        features_TDATA,
+        layer9_out_TDATA,
+        layer10_out_TDATA,
         ap_clk,
-        ap_rst,
+        ap_rst_n,
+        features_TVALID,
+        features_TREADY,
         ap_start,
+        layer9_out_TVALID,
+        layer9_out_TREADY,
         ap_done,
-        ap_idle,
+        layer10_out_TVALID,
+        layer10_out_TREADY,
         ap_ready,
-        features_address0,
-        features_ce0,
-        features_q0,
-        layer9_out,
-        layer9_out_ap_vld,
-        layer10_out,
-        layer10_out_ap_vld
+        ap_idle
 );
 
-parameter    ap_ST_fsm_state1 = 18'd1;
-parameter    ap_ST_fsm_state2 = 18'd2;
-parameter    ap_ST_fsm_state3 = 18'd4;
-parameter    ap_ST_fsm_state4 = 18'd8;
-parameter    ap_ST_fsm_state5 = 18'd16;
-parameter    ap_ST_fsm_state6 = 18'd32;
-parameter    ap_ST_fsm_state7 = 18'd64;
-parameter    ap_ST_fsm_state8 = 18'd128;
-parameter    ap_ST_fsm_state9 = 18'd256;
-parameter    ap_ST_fsm_state10 = 18'd512;
-parameter    ap_ST_fsm_state11 = 18'd1024;
-parameter    ap_ST_fsm_state12 = 18'd2048;
-parameter    ap_ST_fsm_state13 = 18'd4096;
-parameter    ap_ST_fsm_state14 = 18'd8192;
-parameter    ap_ST_fsm_state15 = 18'd16384;
-parameter    ap_ST_fsm_state16 = 18'd32768;
-parameter    ap_ST_fsm_state17 = 18'd65536;
-parameter    ap_ST_fsm_state18 = 18'd131072;
 
+input  [671:0] features_TDATA;
+output  [31:0] layer9_out_TDATA;
+output  [31:0] layer10_out_TDATA;
 input   ap_clk;
-input   ap_rst;
+input   ap_rst_n;
+input   features_TVALID;
+output   features_TREADY;
 input   ap_start;
+output   layer9_out_TVALID;
+input   layer9_out_TREADY;
 output   ap_done;
-output   ap_idle;
+output   layer10_out_TVALID;
+input   layer10_out_TREADY;
 output   ap_ready;
-output  [4:0] features_address0;
-output   features_ce0;
-input  [17:0] features_q0;
-output  [17:0] layer9_out;
-output   layer9_out_ap_vld;
-output  [31:0] layer10_out;
-output   layer10_out_ap_vld;
+output   ap_idle;
 
-reg ap_done;
-reg ap_idle;
-reg ap_ready;
-reg layer9_out_ap_vld;
-reg layer10_out_ap_vld;
-
-(* fsm_encoding = "none" *) reg   [17:0] ap_CS_fsm;
-wire    ap_CS_fsm_state1;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_done;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_idle;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_ready;
-wire   [4:0] grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_features_address0;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_features_ce0;
-wire   [17:0] grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_layer2_out_din;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_layer2_out_write;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_done;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_idle;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_ready;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer2_out_read;
-wire   [7:0] grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer3_out_din;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer3_out_write;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_done;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_idle;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_ready;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer3_out_read;
-wire   [17:0] grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer4_out_din;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer4_out_write;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_done;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_idle;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_ready;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer4_out_read;
-wire   [7:0] grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer5_out_din;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer5_out_write;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_done;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_idle;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_ready;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer5_out_read;
-wire   [17:0] grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer6_out_din;
-wire    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer6_out_write;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_done;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_idle;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_ready;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer6_out_read;
-wire   [7:0] grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer7_out_din;
-wire    grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer7_out_write;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_done;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_idle;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_ready;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer7_out_read;
-wire   [31:0] grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer8_out_din;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer8_out_write;
-wire    grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start;
-wire    grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_done;
-wire    grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_idle;
-wire    grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_ready;
-wire    grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_layer8_out_read;
-reg    grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_ce;
-wire   [11:0] grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_return;
-wire    grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_layer8_out_blk_n;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done;
-wire    ap_CS_fsm_state15;
-wire    ap_CS_fsm_state16;
-wire    ap_CS_fsm_state17;
-wire    ap_CS_fsm_state18;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_idle;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_ready;
-wire    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_layer7_out_read;
-wire   [21:0] grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_return;
-reg    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start_reg;
-wire    ap_CS_fsm_state2;
+ reg    ap_rst_n_inv;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_start;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_done;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_continue;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_idle;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_ready;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_start_out;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_start_write;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_features_TREADY;
+wire   [2303:0] dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_layer2_out_din;
+wire    dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_layer2_out_write;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_start;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_done;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_continue;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_idle;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_ready;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_start_out;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_start_write;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer2_out_read;
+wire   [1023:0] relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer3_out_din;
+wire    relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer3_out_write;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_start;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_done;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_continue;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_idle;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_ready;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_start_out;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_start_write;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer3_out_read;
+wire   [1151:0] dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer4_out_din;
+wire    dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer4_out_write;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_start;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_done;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_continue;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_idle;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_ready;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_start_out;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_start_write;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer4_out_read;
+wire   [511:0] relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer5_out_din;
+wire    relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer5_out_write;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_start;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_done;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_continue;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_idle;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_ready;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_start_out;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_start_write;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer5_out_read;
+wire   [575:0] dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer6_out_din;
+wire    dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer6_out_write;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_start;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_done;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_continue;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_idle;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_ready;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_start_out;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_start_write;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer6_out_read;
+wire   [255:0] relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer7_out_din;
+wire    relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer7_out_write;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_start;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_full_n;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_done;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_continue;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_idle;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_ready;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_out;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_write;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer7_out_read;
+wire   [255:0] clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy1_din;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy1_write;
+wire   [255:0] clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy2_din;
+wire    clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy2_write;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_start;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_done;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_continue;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_idle;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_ready;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_start_out;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_start_write;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer11_cpy1_read;
+wire   [31:0] dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer8_out_din;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer8_out_write;
+wire    sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_start;
+wire    sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_done;
+wire    sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_continue;
+wire    sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_idle;
+wire    sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_ready;
+wire    sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer8_out_read;
+wire   [31:0] sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer9_out_TDATA;
+wire    sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer9_out_TVALID;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_start;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_done;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_continue;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_idle;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_ready;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer11_cpy2_read;
+wire   [31:0] dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer10_out_TDATA;
+wire    dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer10_out_TVALID;
 wire    layer2_out_full_n;
-reg    layer2_out_write;
-reg    grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start_reg;
-wire    ap_CS_fsm_state3;
-wire   [17:0] layer2_out_dout;
+wire   [2303:0] layer2_out_dout;
 wire    layer2_out_empty_n;
-reg    layer2_out_read;
-wire    ap_CS_fsm_state4;
+wire   [1:0] layer2_out_num_data_valid;
+wire   [1:0] layer2_out_fifo_cap;
 wire    layer3_out_full_n;
-reg    layer3_out_write;
-reg    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start_reg;
-wire    ap_CS_fsm_state5;
-wire   [7:0] layer3_out_dout;
+wire   [1023:0] layer3_out_dout;
 wire    layer3_out_empty_n;
-reg    layer3_out_read;
-wire    ap_CS_fsm_state6;
+wire   [1:0] layer3_out_num_data_valid;
+wire   [1:0] layer3_out_fifo_cap;
 wire    layer4_out_full_n;
-reg    layer4_out_write;
-reg    grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start_reg;
-wire    ap_CS_fsm_state7;
-wire   [17:0] layer4_out_dout;
+wire   [1151:0] layer4_out_dout;
 wire    layer4_out_empty_n;
-reg    layer4_out_read;
-wire    ap_CS_fsm_state8;
+wire   [1:0] layer4_out_num_data_valid;
+wire   [1:0] layer4_out_fifo_cap;
 wire    layer5_out_full_n;
-reg    layer5_out_write;
-reg    grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start_reg;
-wire    ap_CS_fsm_state9;
-wire   [7:0] layer5_out_dout;
+wire   [511:0] layer5_out_dout;
 wire    layer5_out_empty_n;
-reg    layer5_out_read;
-wire    ap_CS_fsm_state10;
+wire   [1:0] layer5_out_num_data_valid;
+wire   [1:0] layer5_out_fifo_cap;
 wire    layer6_out_full_n;
-reg    layer6_out_write;
-reg    grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start_reg;
-wire    ap_CS_fsm_state11;
-wire   [17:0] layer6_out_dout;
+wire   [575:0] layer6_out_dout;
 wire    layer6_out_empty_n;
-reg    layer6_out_read;
-wire    ap_CS_fsm_state12;
+wire   [1:0] layer6_out_num_data_valid;
+wire   [1:0] layer6_out_fifo_cap;
 wire    layer7_out_full_n;
-reg    layer7_out_write;
-reg    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start_reg;
-wire    ap_CS_fsm_state13;
-wire   [7:0] layer7_out_dout;
+wire   [255:0] layer7_out_dout;
 wire    layer7_out_empty_n;
-reg    layer7_out_read;
-wire    ap_CS_fsm_state14;
+wire   [1:0] layer7_out_num_data_valid;
+wire   [1:0] layer7_out_fifo_cap;
+wire    layer11_cpy1_full_n;
+wire   [255:0] layer11_cpy1_dout;
+wire    layer11_cpy1_empty_n;
+wire   [1:0] layer11_cpy1_num_data_valid;
+wire   [1:0] layer11_cpy1_fifo_cap;
+wire    layer11_cpy2_full_n;
+wire   [255:0] layer11_cpy2_dout;
+wire    layer11_cpy2_empty_n;
+wire   [1:0] layer11_cpy2_num_data_valid;
+wire   [1:0] layer11_cpy2_fifo_cap;
 wire    layer8_out_full_n;
-reg    layer8_out_write;
-reg    grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start_reg;
-reg   [17:0] ap_NS_fsm;
-wire    ap_NS_fsm_state15;
 wire   [31:0] layer8_out_dout;
 wire    layer8_out_empty_n;
-reg    layer8_out_read;
-reg    grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start_reg;
-reg    ap_ST_fsm_state1_blk;
-reg    ap_ST_fsm_state2_blk;
-wire    ap_ST_fsm_state3_blk;
-reg    ap_ST_fsm_state4_blk;
-wire    ap_ST_fsm_state5_blk;
-reg    ap_ST_fsm_state6_blk;
-wire    ap_ST_fsm_state7_blk;
-reg    ap_ST_fsm_state8_blk;
-wire    ap_ST_fsm_state9_blk;
-reg    ap_ST_fsm_state10_blk;
-wire    ap_ST_fsm_state11_blk;
-reg    ap_ST_fsm_state12_blk;
-wire    ap_ST_fsm_state13_blk;
-reg    ap_ST_fsm_state14_blk;
-wire    ap_ST_fsm_state15_blk;
-wire    ap_ST_fsm_state16_blk;
-wire    ap_ST_fsm_state17_blk;
-reg    ap_ST_fsm_state18_blk;
-wire    ap_ce_reg;
+wire   [1:0] layer8_out_num_data_valid;
+wire   [1:0] layer8_out_fifo_cap;
+wire    ap_sync_done;
+wire   [0:0] start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_din;
+wire    start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_full_n;
+wire   [0:0] start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_dout;
+wire    start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_empty_n;
+wire   [0:0] start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_din;
+wire    start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_full_n;
+wire   [0:0] start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_dout;
+wire    start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_empty_n;
+wire   [0:0] start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_din;
+wire    start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_full_n;
+wire   [0:0] start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_dout;
+wire    start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_empty_n;
+wire   [0:0] start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_din;
+wire    start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_full_n;
+wire   [0:0] start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_dout;
+wire    start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_empty_n;
+wire   [0:0] start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_din;
+wire    start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_full_n;
+wire   [0:0] start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_dout;
+wire    start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_empty_n;
+wire   [0:0] start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_din;
+wire    start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_full_n;
+wire   [0:0] start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_dout;
+wire    start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_empty_n;
+wire   [0:0] start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_din;
+wire    start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_full_n;
+wire   [0:0] start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_dout;
+wire    start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_empty_n;
+wire   [0:0] start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_din;
+wire    start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_full_n;
+wire   [0:0] start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_dout;
+wire    start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_empty_n;
+wire   [0:0] start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_din;
+wire    start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_full_n;
+wire   [0:0] start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_dout;
+wire    start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_empty_n;
 
-// power-on initialization
-initial begin
-#0 ap_CS_fsm = 18'd1;
-#0 grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start_reg = 1'b0;
-#0 grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start_reg = 1'b0;
-#0 grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start_reg = 1'b0;
-#0 grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start_reg = 1'b0;
-#0 grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start_reg = 1'b0;
-#0 grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start_reg = 1'b0;
-#0 grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start_reg = 1'b0;
-#0 grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start_reg = 1'b0;
-#0 grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start_reg = 1'b0;
-end
-
-myproject_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142(
+myproject_dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_s dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start),
-    .ap_done(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_done),
-    .ap_idle(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_idle),
-    .ap_ready(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_ready),
-    .features_address0(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_features_address0),
-    .features_ce0(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_features_ce0),
-    .features_q0(features_q0),
-    .layer2_out_din(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_layer2_out_din),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_start),
+    .start_full_n(start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_full_n),
+    .ap_done(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_done),
+    .ap_continue(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_continue),
+    .ap_idle(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_idle),
+    .ap_ready(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_ready),
+    .start_out(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_start_out),
+    .start_write(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_start_write),
+    .features_TDATA(features_TDATA),
+    .features_TVALID(features_TVALID),
+    .features_TREADY(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_features_TREADY),
+    .layer2_out_din(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_layer2_out_din),
     .layer2_out_full_n(layer2_out_full_n),
-    .layer2_out_write(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_layer2_out_write)
+    .layer2_out_write(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_layer2_out_write),
+    .layer2_out_num_data_valid(layer2_out_num_data_valid),
+    .layer2_out_fifo_cap(layer2_out_fifo_cap)
 );
 
-myproject_myproject_Pipeline_VITIS_LOOP_46_1 grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153(
+myproject_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_s relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start),
-    .ap_done(grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_done),
-    .ap_idle(grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_idle),
-    .ap_ready(grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_ready),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_start),
+    .start_full_n(start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_full_n),
+    .ap_done(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_done),
+    .ap_continue(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_continue),
+    .ap_idle(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_idle),
+    .ap_ready(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_ready),
+    .start_out(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_start_out),
+    .start_write(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_start_write),
     .layer2_out_dout(layer2_out_dout),
     .layer2_out_empty_n(layer2_out_empty_n),
-    .layer2_out_read(grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer2_out_read),
-    .layer3_out_din(grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer3_out_din),
+    .layer2_out_read(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer2_out_read),
+    .layer2_out_num_data_valid(layer2_out_num_data_valid),
+    .layer2_out_fifo_cap(layer2_out_fifo_cap),
+    .layer3_out_din(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer3_out_din),
     .layer3_out_full_n(layer3_out_full_n),
-    .layer3_out_write(grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer3_out_write)
+    .layer3_out_write(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer3_out_write),
+    .layer3_out_num_data_valid(layer3_out_num_data_valid),
+    .layer3_out_fifo_cap(layer3_out_fifo_cap)
 );
 
-myproject_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159(
+myproject_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_s dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start),
-    .ap_done(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_done),
-    .ap_idle(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_idle),
-    .ap_ready(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_ready),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_start),
+    .start_full_n(start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_full_n),
+    .ap_done(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_done),
+    .ap_continue(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_continue),
+    .ap_idle(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_idle),
+    .ap_ready(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_ready),
+    .start_out(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_start_out),
+    .start_write(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_start_write),
     .layer3_out_dout(layer3_out_dout),
     .layer3_out_empty_n(layer3_out_empty_n),
-    .layer3_out_read(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer3_out_read),
-    .layer4_out_din(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer4_out_din),
+    .layer3_out_read(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer3_out_read),
+    .layer3_out_num_data_valid(layer3_out_num_data_valid),
+    .layer3_out_fifo_cap(layer3_out_fifo_cap),
+    .layer4_out_din(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer4_out_din),
     .layer4_out_full_n(layer4_out_full_n),
-    .layer4_out_write(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer4_out_write)
+    .layer4_out_write(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer4_out_write),
+    .layer4_out_num_data_valid(layer4_out_num_data_valid),
+    .layer4_out_fifo_cap(layer4_out_fifo_cap)
 );
 
-myproject_myproject_Pipeline_VITIS_LOOP_46_11 grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169(
+myproject_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_s relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start),
-    .ap_done(grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_done),
-    .ap_idle(grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_idle),
-    .ap_ready(grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_ready),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_start),
+    .start_full_n(start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_full_n),
+    .ap_done(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_done),
+    .ap_continue(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_continue),
+    .ap_idle(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_idle),
+    .ap_ready(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_ready),
+    .start_out(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_start_out),
+    .start_write(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_start_write),
     .layer4_out_dout(layer4_out_dout),
     .layer4_out_empty_n(layer4_out_empty_n),
-    .layer4_out_read(grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer4_out_read),
-    .layer5_out_din(grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer5_out_din),
+    .layer4_out_read(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer4_out_read),
+    .layer4_out_num_data_valid(layer4_out_num_data_valid),
+    .layer4_out_fifo_cap(layer4_out_fifo_cap),
+    .layer5_out_din(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer5_out_din),
     .layer5_out_full_n(layer5_out_full_n),
-    .layer5_out_write(grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer5_out_write)
+    .layer5_out_write(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer5_out_write),
+    .layer5_out_num_data_valid(layer5_out_num_data_valid),
+    .layer5_out_fifo_cap(layer5_out_fifo_cap)
 );
 
-myproject_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175(
+myproject_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_s dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start),
-    .ap_done(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_done),
-    .ap_idle(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_idle),
-    .ap_ready(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_ready),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_start),
+    .start_full_n(start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_full_n),
+    .ap_done(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_done),
+    .ap_continue(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_continue),
+    .ap_idle(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_idle),
+    .ap_ready(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_ready),
+    .start_out(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_start_out),
+    .start_write(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_start_write),
     .layer5_out_dout(layer5_out_dout),
     .layer5_out_empty_n(layer5_out_empty_n),
-    .layer5_out_read(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer5_out_read),
-    .layer6_out_din(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer6_out_din),
+    .layer5_out_read(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer5_out_read),
+    .layer5_out_num_data_valid(layer5_out_num_data_valid),
+    .layer5_out_fifo_cap(layer5_out_fifo_cap),
+    .layer6_out_din(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer6_out_din),
     .layer6_out_full_n(layer6_out_full_n),
-    .layer6_out_write(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer6_out_write)
+    .layer6_out_write(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer6_out_write),
+    .layer6_out_num_data_valid(layer6_out_num_data_valid),
+    .layer6_out_fifo_cap(layer6_out_fifo_cap)
 );
 
-myproject_myproject_Pipeline_VITIS_LOOP_46_12 grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185(
+myproject_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_s relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start),
-    .ap_done(grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_done),
-    .ap_idle(grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_idle),
-    .ap_ready(grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_ready),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_start),
+    .start_full_n(start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_full_n),
+    .ap_done(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_done),
+    .ap_continue(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_continue),
+    .ap_idle(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_idle),
+    .ap_ready(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_ready),
+    .start_out(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_start_out),
+    .start_write(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_start_write),
     .layer6_out_dout(layer6_out_dout),
     .layer6_out_empty_n(layer6_out_empty_n),
-    .layer6_out_read(grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer6_out_read),
-    .layer7_out_din(grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer7_out_din),
+    .layer6_out_read(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer6_out_read),
+    .layer6_out_num_data_valid(layer6_out_num_data_valid),
+    .layer6_out_fifo_cap(layer6_out_fifo_cap),
+    .layer7_out_din(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer7_out_din),
     .layer7_out_full_n(layer7_out_full_n),
-    .layer7_out_write(grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer7_out_write)
+    .layer7_out_write(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer7_out_write),
+    .layer7_out_num_data_valid(layer7_out_num_data_valid),
+    .layer7_out_fifo_cap(layer7_out_fifo_cap)
 );
 
-myproject_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191(
+myproject_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_s clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start),
-    .ap_done(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_done),
-    .ap_idle(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_idle),
-    .ap_ready(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_ready),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_start),
+    .start_full_n(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_full_n),
+    .ap_done(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_done),
+    .ap_continue(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_continue),
+    .ap_idle(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_idle),
+    .ap_ready(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_ready),
+    .start_out(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_out),
+    .start_write(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_write),
     .layer7_out_dout(layer7_out_dout),
     .layer7_out_empty_n(layer7_out_empty_n),
-    .layer7_out_read(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer7_out_read),
-    .layer8_out_din(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer8_out_din),
-    .layer8_out_full_n(layer8_out_full_n),
-    .layer8_out_write(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer8_out_write)
+    .layer7_out_read(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer7_out_read),
+    .layer7_out_num_data_valid(layer7_out_num_data_valid),
+    .layer7_out_fifo_cap(layer7_out_fifo_cap),
+    .layer11_cpy1_din(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy1_din),
+    .layer11_cpy1_full_n(layer11_cpy1_full_n),
+    .layer11_cpy1_write(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy1_write),
+    .layer11_cpy1_num_data_valid(layer11_cpy1_num_data_valid),
+    .layer11_cpy1_fifo_cap(layer11_cpy1_fifo_cap),
+    .layer11_cpy2_din(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy2_din),
+    .layer11_cpy2_full_n(layer11_cpy2_full_n),
+    .layer11_cpy2_write(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy2_write),
+    .layer11_cpy2_num_data_valid(layer11_cpy2_num_data_valid),
+    .layer11_cpy2_fifo_cap(layer11_cpy2_fifo_cap)
 );
 
-myproject_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199(
+myproject_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_s dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start),
-    .ap_done(grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_done),
-    .ap_idle(grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_idle),
-    .ap_ready(grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_ready),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_start),
+    .start_full_n(start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_full_n),
+    .ap_done(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_done),
+    .ap_continue(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_continue),
+    .ap_idle(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_idle),
+    .ap_ready(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_ready),
+    .start_out(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_start_out),
+    .start_write(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_start_write),
+    .layer11_cpy1_dout(layer11_cpy1_dout),
+    .layer11_cpy1_empty_n(layer11_cpy1_empty_n),
+    .layer11_cpy1_read(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer11_cpy1_read),
+    .layer11_cpy1_num_data_valid(layer11_cpy1_num_data_valid),
+    .layer11_cpy1_fifo_cap(layer11_cpy1_fifo_cap),
+    .layer8_out_din(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer8_out_din),
+    .layer8_out_full_n(layer8_out_full_n),
+    .layer8_out_write(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer8_out_write),
+    .layer8_out_num_data_valid(layer8_out_num_data_valid),
+    .layer8_out_fifo_cap(layer8_out_fifo_cap)
+);
+
+myproject_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_s sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0(
+    .ap_clk(ap_clk),
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_start),
+    .ap_done(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_done),
+    .ap_continue(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_continue),
+    .ap_idle(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_idle),
+    .ap_ready(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_ready),
     .layer8_out_dout(layer8_out_dout),
     .layer8_out_empty_n(layer8_out_empty_n),
-    .layer8_out_read(grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_layer8_out_read),
-    .ap_ce(grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_ce),
-    .ap_return(grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_return),
-    .layer8_out_blk_n(grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_layer8_out_blk_n)
+    .layer8_out_read(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer8_out_read),
+    .layer8_out_num_data_valid(layer8_out_num_data_valid),
+    .layer8_out_fifo_cap(layer8_out_fifo_cap),
+    .layer9_out_TDATA(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer9_out_TDATA),
+    .layer9_out_TVALID(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer9_out_TVALID),
+    .layer9_out_TREADY(layer9_out_TREADY)
 );
 
-myproject_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206(
+myproject_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_s dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0(
     .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start),
-    .ap_done(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done),
-    .ap_idle(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_idle),
-    .ap_ready(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_ready),
-    .layer7_out_dout(layer7_out_dout),
-    .layer7_out_empty_n(layer7_out_empty_n),
-    .layer7_out_read(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_layer7_out_read),
-    .ap_return(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_return)
+    .ap_rst(ap_rst_n_inv),
+    .ap_start(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_start),
+    .ap_done(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_done),
+    .ap_continue(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_continue),
+    .ap_idle(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_idle),
+    .ap_ready(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_ready),
+    .layer11_cpy2_dout(layer11_cpy2_dout),
+    .layer11_cpy2_empty_n(layer11_cpy2_empty_n),
+    .layer11_cpy2_read(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer11_cpy2_read),
+    .layer11_cpy2_num_data_valid(layer11_cpy2_num_data_valid),
+    .layer11_cpy2_fifo_cap(layer11_cpy2_fifo_cap),
+    .layer10_out_TDATA(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer10_out_TDATA),
+    .layer10_out_TVALID(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer10_out_TVALID),
+    .layer10_out_TREADY(layer10_out_TREADY)
 );
 
-myproject_fifo_w18_d2_S layer2_out_fifo_U(
+myproject_fifo_w2304_d1_S layer2_out_U(
     .clk(ap_clk),
-    .reset(ap_rst),
+    .reset(ap_rst_n_inv),
     .if_read_ce(1'b1),
     .if_write_ce(1'b1),
-    .if_din(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_layer2_out_din),
+    .if_din(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_layer2_out_din),
     .if_full_n(layer2_out_full_n),
-    .if_write(layer2_out_write),
+    .if_write(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_layer2_out_write),
     .if_dout(layer2_out_dout),
     .if_empty_n(layer2_out_empty_n),
-    .if_read(layer2_out_read)
+    .if_read(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer2_out_read),
+    .if_num_data_valid(layer2_out_num_data_valid),
+    .if_fifo_cap(layer2_out_fifo_cap)
 );
 
-myproject_fifo_w8_d2_S layer3_out_fifo_U(
+myproject_fifo_w1024_d1_S layer3_out_U(
     .clk(ap_clk),
-    .reset(ap_rst),
+    .reset(ap_rst_n_inv),
     .if_read_ce(1'b1),
     .if_write_ce(1'b1),
-    .if_din(grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer3_out_din),
+    .if_din(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer3_out_din),
     .if_full_n(layer3_out_full_n),
-    .if_write(layer3_out_write),
+    .if_write(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_layer3_out_write),
     .if_dout(layer3_out_dout),
     .if_empty_n(layer3_out_empty_n),
-    .if_read(layer3_out_read)
+    .if_read(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer3_out_read),
+    .if_num_data_valid(layer3_out_num_data_valid),
+    .if_fifo_cap(layer3_out_fifo_cap)
 );
 
-myproject_fifo_w18_d2_S layer4_out_fifo_U(
+myproject_fifo_w1152_d1_S layer4_out_U(
     .clk(ap_clk),
-    .reset(ap_rst),
+    .reset(ap_rst_n_inv),
     .if_read_ce(1'b1),
     .if_write_ce(1'b1),
-    .if_din(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer4_out_din),
+    .if_din(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer4_out_din),
     .if_full_n(layer4_out_full_n),
-    .if_write(layer4_out_write),
+    .if_write(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_layer4_out_write),
     .if_dout(layer4_out_dout),
     .if_empty_n(layer4_out_empty_n),
-    .if_read(layer4_out_read)
+    .if_read(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer4_out_read),
+    .if_num_data_valid(layer4_out_num_data_valid),
+    .if_fifo_cap(layer4_out_fifo_cap)
 );
 
-myproject_fifo_w8_d2_S layer5_out_fifo_U(
+myproject_fifo_w512_d1_S layer5_out_U(
     .clk(ap_clk),
-    .reset(ap_rst),
+    .reset(ap_rst_n_inv),
     .if_read_ce(1'b1),
     .if_write_ce(1'b1),
-    .if_din(grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer5_out_din),
+    .if_din(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer5_out_din),
     .if_full_n(layer5_out_full_n),
-    .if_write(layer5_out_write),
+    .if_write(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_layer5_out_write),
     .if_dout(layer5_out_dout),
     .if_empty_n(layer5_out_empty_n),
-    .if_read(layer5_out_read)
+    .if_read(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer5_out_read),
+    .if_num_data_valid(layer5_out_num_data_valid),
+    .if_fifo_cap(layer5_out_fifo_cap)
 );
 
-myproject_fifo_w18_d2_S layer6_out_fifo_U(
+myproject_fifo_w576_d1_S layer6_out_U(
     .clk(ap_clk),
-    .reset(ap_rst),
+    .reset(ap_rst_n_inv),
     .if_read_ce(1'b1),
     .if_write_ce(1'b1),
-    .if_din(grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer6_out_din),
+    .if_din(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer6_out_din),
     .if_full_n(layer6_out_full_n),
-    .if_write(layer6_out_write),
+    .if_write(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_layer6_out_write),
     .if_dout(layer6_out_dout),
     .if_empty_n(layer6_out_empty_n),
-    .if_read(layer6_out_read)
+    .if_read(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer6_out_read),
+    .if_num_data_valid(layer6_out_num_data_valid),
+    .if_fifo_cap(layer6_out_fifo_cap)
 );
 
-myproject_fifo_w8_d2_S layer7_out_fifo_U(
+myproject_fifo_w256_d1_S layer7_out_U(
     .clk(ap_clk),
-    .reset(ap_rst),
+    .reset(ap_rst_n_inv),
     .if_read_ce(1'b1),
     .if_write_ce(1'b1),
-    .if_din(grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer7_out_din),
+    .if_din(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer7_out_din),
     .if_full_n(layer7_out_full_n),
-    .if_write(layer7_out_write),
+    .if_write(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_layer7_out_write),
     .if_dout(layer7_out_dout),
     .if_empty_n(layer7_out_empty_n),
-    .if_read(layer7_out_read)
+    .if_read(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer7_out_read),
+    .if_num_data_valid(layer7_out_num_data_valid),
+    .if_fifo_cap(layer7_out_fifo_cap)
 );
 
-myproject_fifo_w32_d2_S layer8_out_fifo_U(
+myproject_fifo_w256_d1_S layer11_cpy1_U(
     .clk(ap_clk),
-    .reset(ap_rst),
+    .reset(ap_rst_n_inv),
     .if_read_ce(1'b1),
     .if_write_ce(1'b1),
-    .if_din(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer8_out_din),
-    .if_full_n(layer8_out_full_n),
-    .if_write(layer8_out_write),
-    .if_dout(layer8_out_dout),
-    .if_empty_n(layer8_out_empty_n),
-    .if_read(layer8_out_read)
+    .if_din(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy1_din),
+    .if_full_n(layer11_cpy1_full_n),
+    .if_write(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy1_write),
+    .if_dout(layer11_cpy1_dout),
+    .if_empty_n(layer11_cpy1_empty_n),
+    .if_read(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer11_cpy1_read),
+    .if_num_data_valid(layer11_cpy1_num_data_valid),
+    .if_fifo_cap(layer11_cpy1_fifo_cap)
 );
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        ap_CS_fsm <= ap_ST_fsm_state1;
-    end else begin
-        ap_CS_fsm <= ap_NS_fsm;
-    end
-end
+myproject_fifo_w256_d1_S layer11_cpy2_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy2_din),
+    .if_full_n(layer11_cpy2_full_n),
+    .if_write(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_layer11_cpy2_write),
+    .if_dout(layer11_cpy2_dout),
+    .if_empty_n(layer11_cpy2_empty_n),
+    .if_read(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer11_cpy2_read),
+    .if_num_data_valid(layer11_cpy2_num_data_valid),
+    .if_fifo_cap(layer11_cpy2_fifo_cap)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start_reg <= 1'b0;
-    end else begin
-        if (((ap_start == 1'b1) & (1'b1 == ap_CS_fsm_state1))) begin
-            grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start_reg <= 1'b1;
-        end else if ((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_ready == 1'b1)) begin
-            grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_fifo_w32_d1_S layer8_out_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer8_out_din),
+    .if_full_n(layer8_out_full_n),
+    .if_write(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_layer8_out_write),
+    .if_dout(layer8_out_dout),
+    .if_empty_n(layer8_out_empty_n),
+    .if_read(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer8_out_read),
+    .if_num_data_valid(layer8_out_num_data_valid),
+    .if_fifo_cap(layer8_out_fifo_cap)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start_reg <= 1'b0;
-    end else begin
-        if ((1'b1 == ap_CS_fsm_state5)) begin
-            grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start_reg <= 1'b1;
-        end else if ((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_ready == 1'b1)) begin
-            grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3kbM start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3kbM_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_din),
+    .if_full_n(start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_full_n),
+    .if_write(dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_start_write),
+    .if_dout(start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_dout),
+    .if_empty_n(start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_empty_n),
+    .if_read(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_ready)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start_reg <= 1'b0;
-    end else begin
-        if ((1'b1 == ap_CS_fsm_state9)) begin
-            grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start_reg <= 1'b1;
-        end else if ((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_ready == 1'b1)) begin
-            grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0 start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_din),
+    .if_full_n(start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_full_n),
+    .if_write(relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_start_write),
+    .if_dout(start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_dout),
+    .if_empty_n(start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_empty_n),
+    .if_read(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_ready)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start_reg <= 1'b0;
-    end else begin
-        if ((1'b1 == ap_CS_fsm_state17)) begin
-            grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start_reg <= 1'b1;
-        end else if ((grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_ready == 1'b1)) begin
-            grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0 start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_din),
+    .if_full_n(start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_full_n),
+    .if_write(dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_start_write),
+    .if_dout(start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_dout),
+    .if_empty_n(start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_empty_n),
+    .if_read(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_ready)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start_reg <= 1'b0;
-    end else begin
-        if ((1'b1 == ap_CS_fsm_state13)) begin
-            grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start_reg <= 1'b1;
-        end else if ((grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_ready == 1'b1)) begin
-            grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0 start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_din),
+    .if_full_n(start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_full_n),
+    .if_write(relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_start_write),
+    .if_dout(start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_dout),
+    .if_empty_n(start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_empty_n),
+    .if_read(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_ready)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start_reg <= 1'b0;
-    end else begin
-        if ((1'b1 == ap_CS_fsm_state7)) begin
-            grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start_reg <= 1'b1;
-        end else if ((grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_ready == 1'b1)) begin
-            grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0 start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_din),
+    .if_full_n(start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_full_n),
+    .if_write(dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_start_write),
+    .if_dout(start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_dout),
+    .if_empty_n(start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_empty_n),
+    .if_read(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_ready)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start_reg <= 1'b0;
-    end else begin
-        if ((1'b1 == ap_CS_fsm_state11)) begin
-            grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start_reg <= 1'b1;
-        end else if ((grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_ready == 1'b1)) begin
-            grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0 start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_din),
+    .if_full_n(start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_full_n),
+    .if_write(relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_start_write),
+    .if_dout(start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_dout),
+    .if_empty_n(start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_empty_n),
+    .if_read(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_ready)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start_reg <= 1'b0;
-    end else begin
-        if ((1'b1 == ap_CS_fsm_state3)) begin
-            grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start_reg <= 1'b1;
-        end else if ((grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_ready == 1'b1)) begin
-            grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0 start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_din),
+    .if_full_n(start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_full_n),
+    .if_write(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_write),
+    .if_dout(start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_dout),
+    .if_empty_n(start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_empty_n),
+    .if_read(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_ready)
+);
 
-always @ (posedge ap_clk) begin
-    if (ap_rst == 1'b1) begin
-        grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start_reg <= 1'b0;
-    end else begin
-        if (((1'b1 == ap_NS_fsm_state15) & (1'b1 == ap_CS_fsm_state14))) begin
-            grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start_reg <= 1'b1;
-        end else if ((grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_ready == 1'b1)) begin
-            grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start_reg <= 1'b0;
-        end
-    end
-end
+myproject_start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0 start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_din),
+    .if_full_n(start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_full_n),
+    .if_write(clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_write),
+    .if_dout(start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_dout),
+    .if_empty_n(start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_empty_n),
+    .if_read(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_ready)
+);
 
-always @ (*) begin
-    if ((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_done == 1'b0)) begin
-        ap_ST_fsm_state10_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state10_blk = 1'b0;
-    end
-end
+myproject_start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0 start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_U(
+    .clk(ap_clk),
+    .reset(ap_rst_n_inv),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_din),
+    .if_full_n(start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_full_n),
+    .if_write(dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_start_write),
+    .if_dout(start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_dout),
+    .if_empty_n(start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_empty_n),
+    .if_read(sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_ready)
+);
 
-assign ap_ST_fsm_state11_blk = 1'b0;
+assign ap_done = ap_sync_done;
 
-always @ (*) begin
-    if ((grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_done == 1'b0)) begin
-        ap_ST_fsm_state12_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state12_blk = 1'b0;
-    end
-end
+assign ap_idle = (sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_idle & relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_idle & relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_idle & relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_idle & dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_idle & dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_idle & dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_idle & dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_idle & dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_idle & clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_idle);
 
-assign ap_ST_fsm_state13_blk = 1'b0;
-
-always @ (*) begin
-    if ((grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_done == 1'b0)) begin
-        ap_ST_fsm_state14_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state14_blk = 1'b0;
-    end
-end
-
-assign ap_ST_fsm_state15_blk = 1'b0;
-
-assign ap_ST_fsm_state16_blk = 1'b0;
-
-assign ap_ST_fsm_state17_blk = 1'b0;
-
-always @ (*) begin
-    if ((grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done == 1'b0)) begin
-        ap_ST_fsm_state18_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state18_blk = 1'b0;
-    end
-end
+assign ap_ready = dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_ready;
 
 always @ (*) begin
-    if ((ap_start == 1'b0)) begin
-        ap_ST_fsm_state1_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state1_blk = 1'b0;
-    end
+    ap_rst_n_inv = ~ap_rst_n;
 end
 
-always @ (*) begin
-    if ((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_done == 1'b0)) begin
-        ap_ST_fsm_state2_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state2_blk = 1'b0;
-    end
-end
+assign ap_sync_done = (sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_done & dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_done);
 
-assign ap_ST_fsm_state3_blk = 1'b0;
+assign clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_continue = 1'b1;
 
-always @ (*) begin
-    if ((grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_done == 1'b0)) begin
-        ap_ST_fsm_state4_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state4_blk = 1'b0;
-    end
-end
+assign clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_ap_start = start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_empty_n;
 
-assign ap_ST_fsm_state5_blk = 1'b0;
+assign clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_start_full_n = (start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_full_n & start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_full_n);
 
-always @ (*) begin
-    if ((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_done == 1'b0)) begin
-        ap_ST_fsm_state6_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state6_blk = 1'b0;
-    end
-end
+assign dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_continue = 1'b1;
 
-assign ap_ST_fsm_state7_blk = 1'b0;
+assign dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_ap_start = start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_empty_n;
 
-always @ (*) begin
-    if ((grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_done == 1'b0)) begin
-        ap_ST_fsm_state8_blk = 1'b1;
-    end else begin
-        ap_ST_fsm_state8_blk = 1'b0;
-    end
-end
+assign dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_continue = 1'b1;
 
-assign ap_ST_fsm_state9_blk = 1'b0;
+assign dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_ap_start = ap_start;
 
-always @ (*) begin
-    if (((1'b1 == ap_CS_fsm_state18) & (grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done == 1'b1))) begin
-        ap_done = 1'b1;
-    end else begin
-        ap_done = 1'b0;
-    end
-end
+assign dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_continue = ap_sync_done;
 
-always @ (*) begin
-    if (((ap_start == 1'b0) & (1'b1 == ap_CS_fsm_state1))) begin
-        ap_idle = 1'b1;
-    end else begin
-        ap_idle = 1'b0;
-    end
-end
+assign dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_ap_start = start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_empty_n;
 
-always @ (*) begin
-    if (((1'b1 == ap_CS_fsm_state18) & (grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done == 1'b1))) begin
-        ap_ready = 1'b1;
-    end else begin
-        ap_ready = 1'b0;
-    end
-end
+assign dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_continue = 1'b1;
 
-always @ (*) begin
-    if (((1'b1 == ap_CS_fsm_state17) | (1'b1 == ap_CS_fsm_state16) | (1'b1 == ap_CS_fsm_state15) | ((1'b1 == ap_CS_fsm_state18) & (grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done == 1'b1)))) begin
-        grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_ce = 1'b1;
-    end else begin
-        grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_ce = 1'b0;
-    end
-end
+assign dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_ap_start = start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_empty_n;
 
-always @ (*) begin
-    if (((1'b1 == ap_CS_fsm_state18) & (grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done == 1'b1))) begin
-        layer10_out_ap_vld = 1'b1;
-    end else begin
-        layer10_out_ap_vld = 1'b0;
-    end
-end
+assign dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_continue = 1'b1;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state4)) begin
-        layer2_out_read = grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer2_out_read;
-    end else begin
-        layer2_out_read = 1'b0;
-    end
-end
+assign dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_ap_start = start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_empty_n;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state2)) begin
-        layer2_out_write = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_layer2_out_write;
-    end else begin
-        layer2_out_write = 1'b0;
-    end
-end
+assign features_TREADY = dense_array_ap_fixed_21u_array_ap_fixed_18_6_5_3_0_128u_config2_U0_features_TREADY;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state6)) begin
-        layer3_out_read = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer3_out_read;
-    end else begin
-        layer3_out_read = 1'b0;
-    end
-end
+assign layer10_out_TDATA = dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer10_out_TDATA;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state4)) begin
-        layer3_out_write = grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_layer3_out_write;
-    end else begin
-        layer3_out_write = 1'b0;
-    end
-end
+assign layer10_out_TVALID = dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_layer10_out_TVALID;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state8)) begin
-        layer4_out_read = grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer4_out_read;
-    end else begin
-        layer4_out_read = 1'b0;
-    end
-end
+assign layer9_out_TDATA = sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer9_out_TDATA;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state6)) begin
-        layer4_out_write = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_layer4_out_write;
-    end else begin
-        layer4_out_write = 1'b0;
-    end
-end
+assign layer9_out_TVALID = sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_layer9_out_TVALID;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state10)) begin
-        layer5_out_read = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer5_out_read;
-    end else begin
-        layer5_out_read = 1'b0;
-    end
-end
+assign relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_continue = 1'b1;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state8)) begin
-        layer5_out_write = grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_layer5_out_write;
-    end else begin
-        layer5_out_write = 1'b0;
-    end
-end
+assign relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_ap_start = start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_empty_n;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state12)) begin
-        layer6_out_read = grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer6_out_read;
-    end else begin
-        layer6_out_read = 1'b0;
-    end
-end
+assign relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_continue = 1'b1;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state10)) begin
-        layer6_out_write = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_layer6_out_write;
-    end else begin
-        layer6_out_write = 1'b0;
-    end
-end
+assign relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_ap_start = start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_empty_n;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state18)) begin
-        layer7_out_read = grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_layer7_out_read;
-    end else if ((1'b1 == ap_CS_fsm_state14)) begin
-        layer7_out_read = grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer7_out_read;
-    end else begin
-        layer7_out_read = 1'b0;
-    end
-end
+assign relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_continue = 1'b1;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state12)) begin
-        layer7_out_write = grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_layer7_out_write;
-    end else begin
-        layer7_out_write = 1'b0;
-    end
-end
+assign relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_ap_start = start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_empty_n;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state15)) begin
-        layer8_out_read = grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_layer8_out_read;
-    end else begin
-        layer8_out_read = 1'b0;
-    end
-end
+assign sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_continue = ap_sync_done;
 
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state14)) begin
-        layer8_out_write = grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_layer8_out_write;
-    end else begin
-        layer8_out_write = 1'b0;
-    end
-end
+assign sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_ap_start = start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_empty_n;
 
-always @ (*) begin
-    if (((1'b1 == ap_CS_fsm_state18) & (grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done == 1'b1))) begin
-        layer9_out_ap_vld = 1'b1;
-    end else begin
-        layer9_out_ap_vld = 1'b0;
-    end
-end
+assign start_for_clone_stream_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_32_U0_din = 1'b1;
 
-always @ (*) begin
-    case (ap_CS_fsm)
-        ap_ST_fsm_state1 : begin
-            if (((ap_start == 1'b1) & (1'b1 == ap_CS_fsm_state1))) begin
-                ap_NS_fsm = ap_ST_fsm_state2;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state1;
-            end
-        end
-        ap_ST_fsm_state2 : begin
-            if (((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state2))) begin
-                ap_NS_fsm = ap_ST_fsm_state3;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state2;
-            end
-        end
-        ap_ST_fsm_state3 : begin
-            ap_NS_fsm = ap_ST_fsm_state4;
-        end
-        ap_ST_fsm_state4 : begin
-            if (((grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state4))) begin
-                ap_NS_fsm = ap_ST_fsm_state5;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state4;
-            end
-        end
-        ap_ST_fsm_state5 : begin
-            ap_NS_fsm = ap_ST_fsm_state6;
-        end
-        ap_ST_fsm_state6 : begin
-            if (((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state6))) begin
-                ap_NS_fsm = ap_ST_fsm_state7;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state6;
-            end
-        end
-        ap_ST_fsm_state7 : begin
-            ap_NS_fsm = ap_ST_fsm_state8;
-        end
-        ap_ST_fsm_state8 : begin
-            if (((grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state8))) begin
-                ap_NS_fsm = ap_ST_fsm_state9;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state8;
-            end
-        end
-        ap_ST_fsm_state9 : begin
-            ap_NS_fsm = ap_ST_fsm_state10;
-        end
-        ap_ST_fsm_state10 : begin
-            if (((grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state10))) begin
-                ap_NS_fsm = ap_ST_fsm_state11;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state10;
-            end
-        end
-        ap_ST_fsm_state11 : begin
-            ap_NS_fsm = ap_ST_fsm_state12;
-        end
-        ap_ST_fsm_state12 : begin
-            if (((1'b1 == ap_CS_fsm_state12) & (grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_done == 1'b1))) begin
-                ap_NS_fsm = ap_ST_fsm_state13;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state12;
-            end
-        end
-        ap_ST_fsm_state13 : begin
-            ap_NS_fsm = ap_ST_fsm_state14;
-        end
-        ap_ST_fsm_state14 : begin
-            if (((1'b1 == ap_CS_fsm_state14) & (grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_done == 1'b1))) begin
-                ap_NS_fsm = ap_ST_fsm_state15;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state14;
-            end
-        end
-        ap_ST_fsm_state15 : begin
-            ap_NS_fsm = ap_ST_fsm_state16;
-        end
-        ap_ST_fsm_state16 : begin
-            ap_NS_fsm = ap_ST_fsm_state17;
-        end
-        ap_ST_fsm_state17 : begin
-            ap_NS_fsm = ap_ST_fsm_state18;
-        end
-        ap_ST_fsm_state18 : begin
-            if (((1'b1 == ap_CS_fsm_state18) & (grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_done == 1'b1))) begin
-                ap_NS_fsm = ap_ST_fsm_state1;
-            end else begin
-                ap_NS_fsm = ap_ST_fsm_state18;
-            end
-        end
-        default : begin
-            ap_NS_fsm = 'bx;
-        end
-    endcase
-end
+assign start_for_dense_array_ap_fixed_128u_array_ap_fixed_18_6_5_3_0_64u_config4_U0_din = 1'b1;
 
-assign ap_CS_fsm_state1 = ap_CS_fsm[32'd0];
+assign start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config10_U0_din = 1'b1;
 
-assign ap_CS_fsm_state10 = ap_CS_fsm[32'd9];
+assign start_for_dense_array_ap_fixed_32u_array_ap_fixed_32_16_5_3_0_1u_config8_U0_din = 1'b1;
 
-assign ap_CS_fsm_state11 = ap_CS_fsm[32'd10];
+assign start_for_dense_array_ap_fixed_64u_array_ap_fixed_18_6_5_3_0_32u_config6_U0_din = 1'b1;
 
-assign ap_CS_fsm_state12 = ap_CS_fsm[32'd11];
+assign start_for_relu_array_ap_fixed_128u_array_ap_fixed_8_4_5_3_0_128u_relu_config3_U0_din = 1'b1;
 
-assign ap_CS_fsm_state13 = ap_CS_fsm[32'd12];
+assign start_for_relu_array_ap_fixed_32u_array_ap_fixed_8_4_5_3_0_32u_relu_config7_U0_din = 1'b1;
 
-assign ap_CS_fsm_state14 = ap_CS_fsm[32'd13];
+assign start_for_relu_array_ap_fixed_64u_array_ap_fixed_8_4_5_3_0_64u_relu_config5_U0_din = 1'b1;
 
-assign ap_CS_fsm_state15 = ap_CS_fsm[32'd14];
+assign start_for_sigmoid_array_array_ap_fixed_18_6_5_3_0_1u_sigmoid_config9_U0_din = 1'b1;
 
-assign ap_CS_fsm_state16 = ap_CS_fsm[32'd15];
 
-assign ap_CS_fsm_state17 = ap_CS_fsm[32'd16];
+reg find_df_deadlock = 0;
+// synthesis translate_off
+`include "myproject_hls_deadlock_detector.vh"
+// synthesis translate_on
 
-assign ap_CS_fsm_state18 = ap_CS_fsm[32'd17];
-
-assign ap_CS_fsm_state2 = ap_CS_fsm[32'd1];
-
-assign ap_CS_fsm_state3 = ap_CS_fsm[32'd2];
-
-assign ap_CS_fsm_state4 = ap_CS_fsm[32'd3];
-
-assign ap_CS_fsm_state5 = ap_CS_fsm[32'd4];
-
-assign ap_CS_fsm_state6 = ap_CS_fsm[32'd5];
-
-assign ap_CS_fsm_state7 = ap_CS_fsm[32'd6];
-
-assign ap_CS_fsm_state8 = ap_CS_fsm[32'd7];
-
-assign ap_CS_fsm_state9 = ap_CS_fsm[32'd8];
-
-assign ap_NS_fsm_state15 = ap_NS_fsm[32'd14];
-
-assign features_address0 = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_features_address0;
-
-assign features_ce0 = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_features_ce0;
-
-assign grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config2_s_fu_142_ap_start_reg;
-
-assign grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config4_s_fu_159_ap_start_reg;
-
-assign grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start = grp_dense_resource_rf_gt_nin_rem0_ap_fixed_ap_fixed_18_6_5_3_0_config6_s_fu_175_ap_start_reg;
-
-assign grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start = grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_start_reg;
-
-assign grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start = grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config8_s_fu_191_ap_start_reg;
-
-assign grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start = grp_myproject_Pipeline_VITIS_LOOP_46_11_fu_169_ap_start_reg;
-
-assign grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start = grp_myproject_Pipeline_VITIS_LOOP_46_12_fu_185_ap_start_reg;
-
-assign grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start = grp_myproject_Pipeline_VITIS_LOOP_46_1_fu_153_ap_start_reg;
-
-assign grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start = grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_start_reg;
-
-assign layer10_out = $signed(grp_dense_resource_rf_leq_nin_ap_fixed_ap_fixed_32_16_5_3_0_config10_s_fu_206_ap_return);
-
-assign layer9_out = grp_sigmoid_ap_fixed_32_16_5_3_0_ap_fixed_18_6_5_3_0_sigmoid_config9_s_fu_199_ap_return;
+reg find_kernel_block = 0;
+// synthesis translate_off
+`include "myproject_hls_deadlock_kernel_monitor_top.vh"
+// synthesis translate_on
 
 endmodule //myproject
+

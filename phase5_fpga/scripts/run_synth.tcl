@@ -17,6 +17,23 @@ if {[get_property PROGRESS [get_runs synth_1]] != "100%"} {
 puts "Synthesis complete."
 
 # -----------------------------------------------------------------------
+# GUARD: abort on multi-driven nets (AUDIT_REPORT.md §3)
+# A multi-driven net is legal-looking Verilog that Vivado "resolves" by keeping one
+# driver (often GND) and silently sweeping downstream logic — exactly the bug that
+# produced an earlier invalid netlist (features_q0 tied to ground). Scan the synth log.
+# -----------------------------------------------------------------------
+set _synth_dir [get_property DIRECTORY [get_runs synth_1]]
+set _logf [file join $_synth_dir "runme.log"]
+if {[file exists $_logf]} {
+    set _fh [open $_logf r]; set _txt [read $_fh]; close $_fh
+    if {[string match -nocase "*multi-driven*" $_txt]} {
+        error "Multi-driven net found in synthesis log:\n  $_logf\nFix it before continuing\
+               — Vivado may have kept a constant driver and swept real logic (AUDIT_REPORT.md §3)."
+    }
+    puts "Multi-driven-net check OK (none found in synthesis log)."
+}
+
+# -----------------------------------------------------------------------
 # IMPLEMENTATION (place and route)
 # -----------------------------------------------------------------------
 launch_runs impl_1 -to_step write_bitstream -jobs 4

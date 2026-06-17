@@ -35,6 +35,20 @@ create_project $PROJECT_NAME $PROJECT_DIR -part xc7a35tcpg236-1 -force
 # The .dat files (ROM init data) are added alongside the .v files so
 # synthesis can locate them via $readmemh.
 # -----------------------------------------------------------------------
+# GUARD (AUDIT_REPORT.md §1): refuse to synthesize the OLD io_serial IP. The current
+# design expects the io_stream AXI-Stream IP (features_TDATA). If ip_repo still holds the
+# old ap_memory IP (features_address0), synthesis would wire the deadlocking block.
+set ip_top "$IP_REPO_DIR/hdl/verilog/myproject.v"
+if {![file exists $ip_top]} {
+    error "MLP IP not found at $ip_top — extract the Phase 4 export into artifacts/ip_repo/ first."
+}
+set _fh [open $ip_top r]; set _ip_txt [read $_fh]; close $_fh
+if {![string match "*features_TDATA*" $_ip_txt]} {
+    error "artifacts/ip_repo holds the OLD ap_memory IP (no features_TDATA). Re-extract the\
+           io_stream Phase 4 export (impl/ip zip) before synthesis — see AUDIT_REPORT.md §1."
+}
+puts "IP check OK: io_stream interface (features_TDATA) present."
+
 add_files -norecurse [glob $IP_REPO_DIR/hdl/verilog/*.v]
 add_files -norecurse [glob $IP_REPO_DIR/hdl/verilog/*.dat]
 
