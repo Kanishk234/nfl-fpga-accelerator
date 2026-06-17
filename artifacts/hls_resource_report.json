@@ -1,15 +1,5 @@
 {
   "csim_mean_delta": 0.04734492301940918,
   "csim_max_delta": 0.09643058478832245,
-  "csim_n_samples": 100,
-  "resources": {
-    "BRAM_18K": 14,
-    "DSP": 18,
-    "FF": 11539,
-    "LUT": 16234
-  },
-  "basys3_fit": true,
-  "timing_met": true,
-  "reuse_factor_used": 147,
-  "report_path": "phase4_hls/hls_project/myproject_prj/solution1/syn/report/csynth.rpt"
+  "csim_n_samples": 100
 }

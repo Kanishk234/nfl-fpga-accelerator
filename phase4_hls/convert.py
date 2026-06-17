@@ -185,14 +185,31 @@ def convert_model(model, config, output_dir='phase4_hls/hls_project'):
         backend='Vitis',          # Vivado HLS was discontinued after 2020.1; Vitis HLS is current
         part='xc7a35tcpg236-1',  # exact Artix-7 part on the Basys 3
         clock_period=10,          # 100 MHz — matches Basys 3 onboard oscillator
-        io_type='io_serial',      # io_serial: intermediate arrays become hls::stream<> FIFOs (no DATAFLOW auto-trigger).
-                                  # io_parallel was tried: HLS auto-applied DATAFLOW, creating 32,708 LUT in FIFOs alone
-                                  # (hundreds of individual FIFOs for the 128/64/32 inter-layer arrays) → 65,148 LUT total (313%).
-                                  # io_serial avoids DATAFLOW. Original issue (Run 4): dense Result loop had #pragma HLS UNROLL
-                                  # which tried to write n_out elements simultaneously to a depth-2 stream — HLS generated a
-                                  # huge n_out-to-2 drain mux (~7,620 extra LUT for dense_1, 14,342 total vs 6,722 expected).
-                                  # Fix: changed Result loop to #pragma HLS PIPELINE II=1 in nnet_dense_resource.h —
-                                  # sequential stream writes, simple counter, ~50 LUT. Target: ~17,000-19,000 LUT.
+        io_type='io_stream',      # io_stream: the maintained hls4ml path. Emits a proper #pragma HLS DATAFLOW
+                                  # region with rate-matched FIFOs and stream-safe dense implementations.
+                                  #
+                                  # WHY we left io_serial (see AUDIT_REPORT.md §1): io_serial generated a strictly
+                                  # SEQUENTIAL top-level FSM (not dataflow) with depth-2 FIFOs between layers whose
+                                  # producer/consumer never run concurrently → the first layer fills its depth-2 FIFO,
+                                  # ap_done never fires, and the design DEADLOCKS in real silicon on the first inference.
+                                  # It also re-read consumed streams (config4/6 did 512 reads of 128 writes; layer7_out
+                                  # had two destructive consumers). Phase 6 only passed because the cocotb Makefile
+                                  # swapped in deep/replay FIFO stubs that are NOT in the bitstream; cosim was never run.
+                                  #
+                                  # io_stream fixes all of that by construction. Earlier io_parallel blowup (32,708 LUT
+                                  # in ping-pong FIFOs → 313%) does NOT predict io_stream: io_stream streams elements
+                                  # through shallow rate-matched FIFOs rather than buffering full inter-layer arrays.
+                                  #
+                                  # GATES (both required, independent):
+                                  #   functional: cosim_design -rtl verilog must PASS (catches stream rate mismatch)
+                                  #   fit:        actual Vivado post-implementation LUTs <= 20,800 (NOT the HLS estimate,
+                                  #               which overcounts). Fallbacks if over: ReuseFactor -> precision -> layer width.
+                                  #
+                                  # NOTE: io_stream changes the top-level interface — `features` becomes an AXI-Stream
+                                  # port (features_TDATA/TVALID/TREADY) instead of ap_memory (address0/ce0/q0).
+                                  # mlp_controller.v must be rewritten for the new handshake. Read the regenerated
+                                  # myproject.v port list before writing it. The io_serial template patches in
+                                  # phase4_hls/patches/ do NOT apply to io_stream — do not overlay them.
     )
 
     firmware_dir = os.path.join(output_dir, 'firmware')
@@ -287,7 +304,7 @@ if __name__ == '__main__':
         'backend':         'Vitis',
         'part':            'xc7a35tcpg236-1',
         'clock_period':    10,
-        'io_type':         'io_parallel',
+        'io_type':         'io_stream',
         'win_result_t':    'ap_fixed<8,1>',
         'spread_result_t': 'ap_fixed<16,7>',
         'model_source':    'model_quantized.keras (QAT weights snapped to fixed-point grid)',

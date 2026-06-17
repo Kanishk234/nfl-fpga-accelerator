@@ -9,7 +9,7 @@
   "backend": "Vitis",
   "part": "xc7a35tcpg236-1",
   "clock_period": 10,
-  "io_type": "io_parallel",
+  "io_type": "io_stream",
   "win_result_t": "ap_fixed<8,1>",
   "spread_result_t": "ap_fixed<16,7>",
   "model_source": "model_quantized.keras (QAT weights snapped to fixed-point grid)",
