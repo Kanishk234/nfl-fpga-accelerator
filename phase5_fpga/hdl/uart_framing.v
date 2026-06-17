@@ -27,7 +27,8 @@ module uart_framing (
     // from mlp_controller
     input      [7:0]  result_win,
     input      [7:0]  result_spread,
-    input             result_valid
+    input             result_valid,
+    input             result_timeout   // MLP watchdog fired (AUDIT_REPORT.md §5.2)
 );
 
     // -----------------------------------------------------------------------
@@ -119,6 +120,13 @@ module uart_framing (
                         tx_win_lat    <= 8'h00;
                         tx_spread_lat <= 8'h00;
                         tx_status_lat <= 8'h01;
+                        tx_state      <= TX_SOF;
+                    end else if (result_timeout) begin
+                        // Inference watchdog fired: distinct status so the host knows the
+                        // MLP never finished, rather than just timing out. (status 0x02)
+                        tx_win_lat    <= 8'h00;
+                        tx_spread_lat <= 8'h00;
+                        tx_status_lat <= 8'h02;
                         tx_state      <= TX_SOF;
                     end
                 end
