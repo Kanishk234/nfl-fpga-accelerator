@@ -5,16 +5,16 @@
   },
   "resources": {
     "LUT": {
-      "used": 9588,
+      "used": 17896,
       "total": 20800,
-      "pct": 46.1,
+      "pct": 86.04,
       "budget": 20800,
       "ok": true
     },
     "FF": {
-      "used": 10127,
+      "used": 29806,
       "total": 41600,
-      "pct": 24.34,
+      "pct": 71.65,
       "budget": 41600,
       "ok": true
     },
@@ -34,7 +34,7 @@
     }
   },
   "timing": {
-    "WNS_ns": 0.111,
+    "WNS_ns": 0.145,
     "timing_ok": true,
     "timing_note": "WNS >= 0 required for 100 MHz operation"
   }
