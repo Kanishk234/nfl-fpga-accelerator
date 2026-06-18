@@ -118,6 +118,13 @@ module tb_top_uart;
         $display("NACK test (corrupted checksum):");
         run_packet(csum ^ 8'hFF, 1'b1);
 
+        // SOF-collision: every feature byte == 0xAA (the request SOF marker). Framing is in
+        // RECV_FEATURES and must treat these as data, not a new SOF. Good checksum -> status 0x00.
+        for (i = 0; i < 21; i = i + 1) fb[i] = 8'hAA;
+        csum = 8'h00; for (i = 0; i < 21; i = i + 1) csum = csum ^ fb[i];   // = 0xAA (21 is odd)
+        $display("SOF-collision test (all features = 0xAA):");
+        run_packet(csum, 1'b0);
+
         $display("\nFULL-UART TEST: %0s (%0d failures)", (fails==0)?"PASS":"FAIL", fails);
         $finish;
     end
