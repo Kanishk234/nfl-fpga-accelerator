@@ -10,7 +10,13 @@
 // Each SEND_ state asserts tx_start for one clock then waits for busy=0
 // before sending the next byte.
 `timescale 1ns / 1ps
-module uart_framing (
+module uart_framing #(
+    // Inter-byte RX watchdog (AUDIT_REPORT.md §5.1): if a byte is dropped mid-packet, the RX FSM
+    // would otherwise desync forever (it consumes the next packet's 0xAA as feature data). After
+    // this many idle cycles mid-packet, resync to WAIT_SOF. Default ~10 ms @ 100 MHz; must exceed
+    // the worst legitimate inter-byte gap (~8,680 cycles for one byte at 115200 baud).
+    parameter [19:0] RX_TIMEOUT_CYCLES = 20'd1_000_000
+)(
     input             clk,
     input             rst,
     // from uart_rx
@@ -38,9 +44,10 @@ module uart_framing (
     localparam RX_RECV_FEATURES = 2'd1;
     localparam RX_RECV_CHECKSUM = 2'd2;
 
-    reg [1:0] rx_state;
-    reg [4:0] byte_cnt;   // 0-20 (21 features)
-    reg [7:0] checksum;   // running XOR of received feature bytes
+    reg [1:0]  rx_state;
+    reg [4:0]  byte_cnt;        // 0-20 (21 features)
+    reg [7:0]  checksum;        // running XOR of received feature bytes
+    reg [19:0] rx_timeout_cnt;  // cycles since the last byte while mid-packet (§5.1 watchdog)
 
     always @(posedge clk) begin
         packet_valid <= 1'b0;
@@ -51,38 +58,52 @@ module uart_framing (
             byte_cnt  <= 5'd0;
             checksum  <= 8'd0;
             feature_bus <= 168'd0;
-        end else if (rx_done) begin
-            case (rx_state)
-                RX_WAIT_SOF: begin
-                    if (rx_data == 8'hAA) begin
-                        byte_cnt <= 5'd0;
-                        checksum <= 8'd0;
-                        rx_state <= RX_RECV_FEATURES;
-                    end
-                    // any other byte: stay in WAIT_SOF (resync)
-                end
+            rx_timeout_cnt <= 20'd0;
+        end else begin
+            // Inter-byte watchdog: reset on every received byte and while idle; otherwise count.
+            if (rx_done || rx_state == RX_WAIT_SOF)
+                rx_timeout_cnt <= 20'd0;
+            else
+                rx_timeout_cnt <= rx_timeout_cnt + 1'b1;
 
-                RX_RECV_FEATURES: begin
-                    feature_bus[byte_cnt*8 +: 8] <= rx_data;
-                    checksum <= checksum ^ rx_data;
-                    if (byte_cnt == 5'd20) begin
-                        rx_state <= RX_RECV_CHECKSUM;
-                    end else begin
-                        byte_cnt <= byte_cnt + 1;
+            if (rx_done) begin
+                case (rx_state)
+                    RX_WAIT_SOF: begin
+                        if (rx_data == 8'hAA) begin
+                            byte_cnt <= 5'd0;
+                            checksum <= 8'd0;
+                            rx_state <= RX_RECV_FEATURES;
+                        end
+                        // any other byte: stay in WAIT_SOF (resync)
                     end
-                end
 
-                RX_RECV_CHECKSUM: begin
-                    if (rx_data == checksum) begin
-                        packet_valid <= 1'b1;
-                    end else begin
-                        packet_error <= 1'b1;
+                    RX_RECV_FEATURES: begin
+                        feature_bus[byte_cnt*8 +: 8] <= rx_data;
+                        checksum <= checksum ^ rx_data;
+                        if (byte_cnt == 5'd20) begin
+                            rx_state <= RX_RECV_CHECKSUM;
+                        end else begin
+                            byte_cnt <= byte_cnt + 1;
+                        end
                     end
-                    rx_state <= RX_WAIT_SOF;
-                end
 
-                default: rx_state <= RX_WAIT_SOF;
-            endcase
+                    RX_RECV_CHECKSUM: begin
+                        if (rx_data == checksum) begin
+                            packet_valid <= 1'b1;
+                        end else begin
+                            packet_error <= 1'b1;
+                        end
+                        rx_state <= RX_WAIT_SOF;
+                    end
+
+                    default: rx_state <= RX_WAIT_SOF;
+                endcase
+            end else if (rx_state != RX_WAIT_SOF && rx_timeout_cnt >= RX_TIMEOUT_CYCLES - 1) begin
+                // Mid-packet stall (dropped byte): resync so the next 0xAA starts a fresh packet.
+                rx_state <= RX_WAIT_SOF;
+                byte_cnt <= 5'd0;
+                checksum <= 8'd0;
+            end
         end
     end
 

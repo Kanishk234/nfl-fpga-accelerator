@@ -36,7 +36,9 @@ module mlp_controller #(
     input              packet_valid,
     // ap_ctrl_hs to/from hls4ml MLP IP
     output reg         ap_start,
-    input              ap_done,
+    input              ap_done,    // intentionally unused: completion is gated on capturing both
+                                   // output beats (win_captured && spread_captured), which is
+                                   // strictly stronger. Vivado's "ap_done unconnected" info is expected.
     input              ap_idle,
     input              ap_ready,
     // AXI4-Stream input (features) -> MLP IP
