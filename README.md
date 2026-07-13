@@ -221,6 +221,32 @@ against the COM port. The data stack and the serial stack never have to coexist.
 
 ---
 
+## ⏱️ Performance & latency
+
+The MLP core runs in a **fixed 591 clock cycles — ~5.9 µs at 100 MHz — with zero jitter.** Every
+inference takes *exactly* the same time; there's no OS, no runtime, no cache, no scheduler.
+
+<div align="center">
+
+| Inference path | Latency / prediction | Throughput (1 stream) |
+|:---|:---:|:---:|
+| **FPGA core** (591 cyc @ 100 MHz) | **~5.9 µs** · deterministic | **~170,000 / s** |
+| CPU — optimized forward pass (same model) | ~16.9 µs · varies | ~55,000 / s |
+
+<sub>FPGA: HLS `csynth.rpt` (591-cycle latency, 587-cycle initiation interval) × 10 ns clock.
+CPU: measured NumPy forward pass of the identical weights on this machine.</sub>
+
+</div>
+
+> [!NOTE]
+> **The honest takeaway.** For a model this small (13k params), the compute win over an optimized CPU
+> is real but modest (~3×) — and end-to-end the deployed system is actually **UART-bound (~12 ms
+> round-trip)**, not compute-bound. The point of doing inference in fabric here isn't raw speedup;
+> it's **deterministic, real-time inference in dedicated hardware with no CPU, OS, or runtime** — the
+> property that matters for embedded/edge deployment, and the reason FPGAs are used for it at scale.
+
+---
+
 ## 📡 Communication protocol
 
 <div align="center">
