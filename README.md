@@ -77,14 +77,37 @@ Twenty-one features per game, engineered from `nflreadpy` schedule data (order l
 
 ### 2 · Model — `phase2_model/`
 
+A small MLP with a **shared trunk** that splits into **two heads** — one classifier (win) and one
+regressor (spread):
+
+<div align="center">
+
+```mermaid
+flowchart LR
+    IN["<b>Input</b><br/>21 features"]:::io
+    H1["<b>Dense 128</b><br/>ReLU"]:::hid
+    H2["<b>Dense 64</b><br/>ReLU"]:::hid
+    H3["<b>Dense 32</b><br/>ReLU"]:::hid
+    W["<b>Dense 1 · sigmoid</b><br/>▶ win probability [0,1]"]:::win
+    S["<b>Dense 1 · linear</b><br/>▶ point spread (pts)"]:::spread
+
+    IN --> H1 --> H2 --> H3
+    H3 --> W
+    H3 --> S
+
+    classDef io fill:#1a1a2e,color:#fff,stroke:#3b82f6,stroke-width:2px
+    classDef hid fill:#0d1b2a,color:#e8edf7,stroke:#22c55e,stroke-width:2px
+    classDef win fill:#22c55e,color:#000,stroke:#16a34a,stroke-width:2px
+    classDef spread fill:#f59e0b,color:#000,stroke:#d97706,stroke-width:2px
 ```
-Input(21)
-  → Dense(128, ReLU) → Dropout(0.2)
-  → Dense(64,  ReLU) → Dropout(0.2)
-  → Dense(32,  ReLU)
-  ├─ Dense(1, sigmoid)  →  win probability
-  └─ Dense(1, linear)   →  point spread
-```
+
+*Dropout(0.2) sits between the hidden layers during training only — it vanishes at inference, so it
+never reaches the hardware.*
+
+</div>
+
+> 💡 That **shared 32-unit trunk feeding two heads** is exactly what deadlocked the first FPGA build:
+> in `io_serial` mode the two heads fought over one stream. See [Phase 4](#4--hls--rtl--phase4_hls).
 
 **13,218 parameters** — tiny on purpose (the 50k budget is what the board's 90 DSPs / 1.8 Mb BRAM can
 hold). Three choices are made **for the hardware, not the math**:
