@@ -84,7 +84,7 @@ class NFLFPGAApp:
 
         self._build_ui()
         self._refresh_ports()
-        self._reload_games()
+        self._season_changed()   # populate Home/Away team filters + the game list
 
     # ── layout ────────────────────────────────────────────────────────
 
@@ -248,13 +248,21 @@ class NFLFPGAApp:
     # ── connection ────────────────────────────────────────────────────
 
     def _refresh_ports(self):
-        ports = [p.device for p in serial.tools.list_ports.comports()]
-        self.port_combo['values'] = ports
-        if ports and not self.port_var.get():
-            self.port_var.set(ports[0])
+        # Show "COM8 — USB Serial Port" so the board's FT2232 UART is identifiable;
+        # keep a label→device map so _connect can recover the bare port name.
+        self._port_map = {}
+        labels = []
+        for p in serial.tools.list_ports.comports():
+            label = f"{p.device} — {p.description}" if p.description else p.device
+            self._port_map[label] = p.device
+            labels.append(label)
+        self.port_combo['values'] = labels
+        if labels and not self.port_var.get():
+            self.port_var.set(labels[0])
 
     def _connect(self):
-        port = self.port_var.get()
+        label = self.port_var.get()
+        port  = self._port_map.get(label, label)   # tolerate a bare "COM8" too
         if not port:
             messagebox.showerror("Error", "Select a COM port first")
             return
@@ -306,8 +314,9 @@ class NFLFPGAApp:
             self.root.after(0, self._set_stage, 3)          # RX
             self.root.after(0, self._display, game, result)
         except Exception as e:
+            msg = str(e)   # bind now: `e` is cleared when the except block exits
             self.root.after(0, self._reset_stages)
-            self.root.after(0, lambda: messagebox.showerror("Inference Error", str(e)))
+            self.root.after(0, lambda m=msg: messagebox.showerror("Inference Error", m))
         finally:
             self.root.after(0, lambda: self.run_btn.config(state=tk.NORMAL,
                                                            text="Run Inference"))
