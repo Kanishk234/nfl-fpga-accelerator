@@ -41,8 +41,9 @@ Byte 2:  spread_int  — signed int8, point spread in whole points
 Byte 3:  status      — 0x00=OK, 0x01=checksum NACK, 0x02=MLP watchdog timeout
 ```
 
-Round-trip measured on the board: **~12 ms** (dominated by the 23-byte UART transfer at
-115200 baud; the MLP itself is 1,494 cycles ≈ 15 µs).
+Round-trip measured on the board: **~11.5 ms out of the box, ~3.4 ms after tuning** — the MLP core
+itself is only 591 cycles (~5.9 µs); the rest is UART + USB-bridge overhead. See
+[Latency Optimization](#latency-optimization--115-ms--34-ms-the-bottleneck-was-not-what-it-looked-like).
 
 ---
 
@@ -283,6 +284,60 @@ for 1,494 cycles per inference — it is genuinely running the model.
 `tests/test_phase7.py` — 17/17 non-board tests pass (decode/encode, checksum, feature
 builder, encoding-matches-sim, vectors present). The 4 board tests (`@BOARD_REQUIRED`,
 gated on `FPGA_PORT`) exercise connect / smoke / NACK / 20-game golden on real hardware.
+
+---
+
+## Latency Optimization — 11.5 ms → 3.4 ms (the bottleneck was not what it looked like)
+
+The round-trip felt slow (~12 ms) for what is a ~6 µs computation, so it was worth profiling.
+A 25-shot measurement (all-`128` features, `pyserial`) showed a suspiciously **constant** ~11.4 ms:
+
+```
+before:  n=25  min 10.60  mean 11.57  median 11.43  max 14.47  ms
+```
+
+### Where the time actually goes
+The tight cluster is the tell — a *fixed* overhead, not compute or line-rate variance:
+
+| Component | Time | Note |
+|---|---:|---|
+| UART line time | ~2.3 ms | 27 bytes × 10 bits ÷ 115200 baud |
+| FPGA MLP compute | ~0.006 ms | 591 cycles @ 100 MHz — negligible |
+| **USB bridge + host overhead** | **~9 ms** | the real cost — **constant** |
+
+The ~9 ms is the **FT2232 USB-UART bridge's latency timer**. The chip doesn't forward received
+bytes to the host immediately — it waits until a USB buffer fills (62 bytes) *or* a timer expires.
+That timer **defaults to 16 ms**, and the 4-byte response is always a partial buffer, so it sits
+waiting. The bottleneck was neither the protocol nor the baud rate — it was a USB driver setting.
+(Notably, switching to SPI would **not** have helped: the data still crosses the same USB link.)
+
+### The fix
+Set the FTDI latency timer **16 ms → 1 ms** — Device Manager → COM8 → Port Settings → Advanced →
+*Latency Timer*, or the registry value it writes:
+
+```
+HKLM\SYSTEM\CurrentControlSet\Enum\FTDIBUS\VID_0403+PID_6010+<serial>\0000\Device Parameters
+    LatencyTimer (DWORD) = 1
+```
+
+No HDL change, no re-synthesis, no re-flash. The setting is persistent (registry, keyed to the
+board's serial) so it survives reboots and follows the board.
+
+### Result
+```
+after:   n=25  min 2.66  mean 3.46  median 3.43  max 4.92  ms      →  ~3.3× faster
+```
+Inference remained **bit-exact** (KC 177/256, spread +5, OK) — only faster. The UART line time
+(~2.3 ms) is now the dominant term.
+
+### Next lever (not taken — already imperceptible)
+Raising the baud rate **115200 → 1,000,000** (change `CLKS_PER_BIT` 868 → 100 in `uart_rx.v` /
+`uart_tx.v`, and `baud` in `fpga_client.py`; 100 MHz ÷ 1 Mbaud = a clean 100 clocks/bit) would cut
+the line term ~2.3 ms → ~0.3 ms and land near ~1–1.5 ms. It requires a re-synthesis and buys a
+sub-millisecond gain no human notices, so it was left as a documented option rather than done.
+
+> **Takeaway:** profile before optimizing. The obvious suspect (baud rate) was ~20% of the latency;
+> the real cost was a USB bridge default that a one-line, no-rebuild change fixed for a 3.3× win.
 
 ---
 
