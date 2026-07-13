@@ -12,7 +12,6 @@ UI shows win probability + point spread.
     # then, on Windows with the board on a COM port:
     python phase7_deploy/ui/app.py
 """
-import json
 import sys
 import time
 import threading
@@ -25,6 +24,7 @@ import serial.tools.list_ports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from phase7_deploy.inference.fpga_client import FPGAClient
+from phase7_deploy.inference.game_catalog import GameCatalog
 
 CATALOG_PATH = Path(__file__).parent.parent / 'games_catalog.json'
 
@@ -33,35 +33,6 @@ CATALOG_PATH = Path(__file__).parent.parent / 'games_catalog.json'
 # is reported separately from the board's measured round-trip.
 STAGE_DWELL_S = 0.12
 STAGES = ["Encode", "TX 23B", "FPGA MLP", "RX 4B"]
-
-
-class GameCatalog:
-    """Read-only view over games_catalog.json — no pandas needed."""
-
-    def __init__(self, path: Path):
-        data = json.loads(path.read_text())
-        self.games     = data['games']
-        self.generated = data.get('generated', '?')
-
-    def seasons(self):
-        return sorted({g['season'] for g in self.games}, reverse=True)
-
-    def teams(self, season=None):
-        pool = self.games if season is None else [g for g in self.games
-                                                  if g['season'] == season]
-        return sorted({g['home'] for g in pool} | {g['away'] for g in pool})
-
-    def filter(self, season, home=None, away=None):
-        out = [g for g in self.games if g['season'] == season]
-        if home:
-            out = [g for g in out if g['home'] == home]
-        if away:
-            out = [g for g in out if g['away'] == away]
-        return sorted(out, key=lambda g: (g['week'], g['home']))
-
-    @staticmethod
-    def label(g):
-        return f"W{g['week']:>2}  {g['home']} (H) vs {g['away']} (A)"
 
 
 class NFLFPGAApp:

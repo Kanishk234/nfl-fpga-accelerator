@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFL FPGA Predictor</title>
+<style>
+  :root{
+    --bg:#0b0f1a; --bg2:#131a2b; --card:#161d30; --card2:#1d2740;
+    --line:#26314d; --txt:#e8edf7; --dim:#8b97b3; --accent:#3b82f6;
+    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--txt);background:radial-gradient(1200px 600px at 20% -10%,#1b2e4a 0,transparent 60%),
+    linear-gradient(160deg,#0b0f1a,#0d1322 60%,#0b0f1a);min-height:100vh}
+  .wrap{max-width:980px;margin:0 auto;padding:24px 18px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:.2px}
+  .brand .chip{font-size:11px;font-weight:600;color:var(--dim);border:1px solid var(--line);
+    padding:3px 8px;border-radius:20px;letter-spacing:.5px}
+  .conn{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.15)}
+  .dot.ok{background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+  select{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px;font-size:14px;outline:none;min-width:0;max-width:100%}
+  select:focus{border-color:var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);
+    border-radius:var(--radius);padding:18px}
+  .card h2{margin:0 0 14px;font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim)}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;color:var(--dim);margin-bottom:5px}
+  .field select{width:100%}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .hint{font-size:12px;color:var(--dim);min-height:16px;margin-top:2px}
+  .hint.warn{color:var(--amber)}
+  button.run{width:100%;margin-top:6px;background:linear-gradient(180deg,#3b82f6,#2563eb);
+    color:#fff;border:0;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;
+    transition:transform .05s,box-shadow .2s;box-shadow:0 8px 24px rgba(37,99,235,.35)}
+  button.run:hover{transform:translateY(-1px)}
+  button.run:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none}
+  /* gauge */
+  .result{display:flex;gap:20px;align-items:center}
+  .gauge{position:relative;width:170px;height:170px;flex:none}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .track{stroke:var(--line)}
+  .gauge .val{stroke:var(--accent);stroke-linecap:round;
+    transition:stroke-dashoffset 1s cubic-bezier(.22,1,.36,1),stroke .4s}
+  .gauge .center{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center}
+  .gauge .pct{font-size:34px;font-weight:800;line-height:1}
+  .gauge .who{font-size:13px;color:var(--dim);margin-top:4px}
+  .rmeta{flex:1;min-width:0}
+  .matchup{font-size:18px;font-weight:700;margin-bottom:2px}
+  .subttl{font-size:12px;color:var(--dim);margin-bottom:12px}
+  .spread{display:inline-flex;align-items:baseline;gap:8px;background:var(--card2);
+    border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px}
+  .spread b{font-size:20px}
+  .spread span{font-size:12px;color:var(--dim)}
+  .badge{display:inline-block;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;margin-right:8px}
+  .badge.ok{background:rgba(34,197,94,.15);color:#86efac}
+  .badge.no{background:rgba(239,68,68,.15);color:#fca5a5}
+  .badge.dim{background:var(--card2);color:var(--dim)}
+  .empty{color:var(--dim);font-size:14px;text-align:center;padding:30px 0}
+  /* pipeline */
+  .pipe{display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap}
+  .step{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);
+    border:1px solid var(--line);border-radius:20px;padding:6px 12px;transition:.25s}
+  .step .sd{width:8px;height:8px;border-radius:50%;background:var(--line);transition:.25s}
+  .step.on{color:var(--txt);border-color:var(--accent)}
+  .step.on .sd{background:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+  .step.done{border-color:var(--green)}
+  .step.done .sd{background:var(--green)}
+  .arrow{color:var(--line);font-size:12px}
+  /* history */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .foot{margin-top:18px;text-align:center;font-size:11px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">🏈 NFL FPGA Predictor <span class="chip">Basys 3 · Artix-7</span></div>
+    <div class="conn">
+      <span class="dot" id="dot"></span><span id="connTxt">idle</span>
+      <select id="port" title="Serial port"></select>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Pick a game</h2>
+      <div class="field">
+        <label>Season</label>
+        <select id="season"></select>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Home (optional)</label><select id="home"></select></div>
+        <div class="field"><label>Away (optional)</label><select id="away"></select></div>
+      </div>
+      <div class="field">
+        <label>Game</label>
+        <select id="game"></select>
+        <div class="hint" id="ghint"></div>
+      </div>
+      <button class="run" id="run" disabled>Run Inference on FPGA</button>
+      <div class="pipe" id="pipe"></div>
+    </div>
+
+    <div class="card">
+      <h2>Prediction</h2>
+      <div id="result"><div class="empty">Pick a game and run it on the board.</div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>History</h2>
+    <table><thead><tr>
+      <th>Game</th><th>Prediction</th><th class="r">Win%</th><th class="r">Spread</th><th class="r">Actual</th><th class="r">ms</th>
+    </tr></thead><tbody id="hist">
+      <tr><td colspan="6" class="empty" style="padding:16px">No runs yet.</td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="foot" id="foot">loading catalog…</div>
+</div>
+
+<script>
+const STEPS = ["Encode 21B", "TX →", "FPGA MLP", "← RX 4B"];
+let GAMES = [], SHOWN = [];
+const $ = id => document.getElementById(id);
+
+function buildPipe(){
+  const p = $('pipe'); p.innerHTML = '';
+  STEPS.forEach((s,i)=>{
+    if(i) p.insertAdjacentHTML('beforeend','<span class="arrow">→</span>');
+    p.insertAdjacentHTML('beforeend',
+      `<span class="step" id="st${i}"><span class="sd"></span>${s}</span>`);
+  });
+}
+function setStep(i,cls){ const e=$('st'+i); if(e) e.className='step '+cls; }
+function resetPipe(){ STEPS.forEach((_,i)=>setStep(i,'')); }
+
+async function boot(){
+  const d = await (await fetch('/api/bootstrap')).json();
+  GAMES = d.games;
+  // port select — default to the board's USB Serial port if present
+  const ps = $('port'); ps.innerHTML='';
+  d.ports.forEach(p=>{
+    const o=document.createElement('option'); o.value=p.device;
+    o.textContent=`${p.device} — ${p.desc}`; ps.appendChild(o);
+  });
+  const usb = d.ports.find(p=>/usb serial/i.test(p.desc));
+  if(usb) ps.value = usb.device;
+  if(!d.ports.length){ ps.innerHTML='<option>no ports</option>'; }
+  // seasons
+  const seasons=[...new Set(GAMES.map(g=>g.season))].sort((a,b)=>b-a);
+  $('season').innerHTML = seasons.map(s=>`<option>${s}</option>`).join('');
+  $('foot').textContent = `${GAMES.length} games · catalog generated ${d.generated}`;
+  buildPipe();
+  seasonChanged();
+}
+
+function seasonChanged(){
+  const s=+$('season').value;
+  const pool=GAMES.filter(g=>g.season===s);
+  const teams=[...new Set(pool.flatMap(g=>[g.home,g.away]))].sort();
+  const opt=['<option value="">Any</option>',...teams.map(t=>`<option>${t}</option>`)].join('');
+  $('home').innerHTML=opt; $('away').innerHTML=opt;
+  reloadGames();
+}
+
+function reloadGames(){
+  const s=+$('season').value, h=$('home').value, a=$('away').value;
+  SHOWN = GAMES.filter(g=>g.season===s && (!h||g.home===h) && (!a||g.away===a))
+               .sort((x,y)=>x.week-y.week || x.home.localeCompare(y.home));
+  $('game').innerHTML = SHOWN.map((g,i)=>
+    `<option value="${i}">W${String(g.week).padStart(2)}  ${g.home} (H) vs ${g.away} (A)</option>`).join('');
+  const hint=$('ghint');
+  if(SHOWN.length){ hint.className='hint'; hint.textContent=`${SHOWN.length} game(s) match`; }
+  else { hint.className='hint warn'; hint.textContent='no game matches that matchup this season'; }
+  $('run').disabled = SHOWN.length===0;
+}
+
+function conn(state,txt){ $('dot').className='dot'+(state==='ok'?' ok':''); $('connTxt').textContent=txt; }
+
+async function run(){
+  const g = SHOWN[+$('game').value]; if(!g) return;
+  const port = $('port').value;
+  $('run').disabled=true; resetPipe();
+  conn('busy','running…');
+  setStep(0,'done'); await sleep(140); setStep(1,'on'); await sleep(140);
+  try{
+    const r = await (await fetch('/api/infer',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({port, gid:g.gid})})).json();
+    if(r.error) throw new Error(r.error);
+    setStep(1,'done'); setStep(2,'on'); await sleep(160);
+    setStep(2,'done'); setStep(3,'done');
+    conn('ok','connected · '+port);
+    render(r); addHist(r);
+  }catch(e){
+    resetPipe(); conn('','error');
+    $('result').innerHTML=`<div class="empty" style="color:#fca5a5">${e.message}<br>
+      <span style="color:var(--dim)">Check the port (board = USB Serial) and that it's programmed.</span></div>`;
+  }finally{ $('run').disabled=false; }
+}
+
+function spreadText(s,home,away){
+  if(s>0) return {big:`${home} −${s}`, sub:`${home} favored by ${s}`};
+  if(s<0) return {big:`${away} −${Math.abs(s)}`, sub:`${away} favored by ${Math.abs(s)}`};
+  return {big:"Pick 'em", sub:'even'};
+}
+function gaugeColor(p){ return p>=.65?'var(--green)':p>=.55?'var(--amber)':'var(--accent)'; }
+
+function render(r){
+  const C=2*Math.PI*74, off=C*(1-r.win_display), col=gaugeColor(r.win_display);
+  const sp=spreadText(r.spread,r.home,r.away);
+  let actual='';
+  if(r.actual_winner){
+    const ok=r.actual_winner.toUpperCase()===r.winner.toUpperCase();
+    actual=`<span class="badge ${ok?'ok':'no'}">${ok?'✓ correct':'✗ missed'}</span>
+            <span class="badge dim">${r.actual_winner} won${r.actual_spread!=null?` by ${Math.abs(r.actual_spread)}`:''}</span>`;
+  }
+  $('result').innerHTML=`
+    <div class="result">
+      <div class="gauge">
+        <svg width="170" height="170" viewBox="0 0 170 170">
+          <circle class="track" cx="85" cy="85" r="74" fill="none" stroke-width="14"></circle>
+          <circle class="val" cx="85" cy="85" r="74" fill="none" stroke-width="14"
+            stroke-dasharray="${C}" stroke-dashoffset="${C}" style="stroke:${col}"></circle>
+        </svg>
+        <div class="center"><div class="pct" style="color:${col}">${Math.round(r.win_display*100)}%</div>
+          <div class="who">${r.winner} to win</div></div>
+      </div>
+      <div class="rmeta">
+        <div class="matchup">${r.home} <span style="color:var(--dim)">vs</span> ${r.away}</div>
+        <div class="subttl">Week ${r.week}, ${r.season} · home / away</div>
+        <div class="spread"><b>${sp.big}</b><span>${sp.sub}</span></div>
+        <div>${actual}</div>
+        <div class="hint" style="margin-top:10px">
+          status ${r.status} · ${r.latency_ms.toFixed(1)} ms round-trip · raw win ${r.raw_win}/256
+        </div>
+      </div>
+    </div>`;
+  // trigger the gauge sweep
+  requestAnimationFrame(()=>{ const v=document.querySelector('.gauge .val'); if(v) v.style.strokeDashoffset=off; });
+}
+
+function addHist(r){
+  const tb=$('hist');
+  if(tb.querySelector('.empty')) tb.innerHTML='';
+  const ok = r.actual_winner && r.actual_winner.toUpperCase()===r.winner.toUpperCase();
+  const act = r.actual_winner ? `${r.actual_winner} ${ok?'✓':'✗'}` : '—';
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${r.season} W${r.week} · ${r.home} v ${r.away}</td>
+    <td>${r.winner}</td><td class="r">${Math.round(r.win_display*100)}%</td>
+    <td class="r">${r.spread>0?'+':''}${r.spread}</td>
+    <td class="r">${act}</td><td class="r">${r.latency_ms.toFixed(0)}</td>`;
+  tb.insertBefore(tr, tb.firstChild);
+}
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+$('season').onchange=seasonChanged;
+$('home').onchange=reloadGames;
+$('away').onchange=reloadGames;
+$('run').onclick=run;
+boot();
+</script>
+</body>
+</html>
