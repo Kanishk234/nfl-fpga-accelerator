@@ -5,8 +5,9 @@
 **A neural network that predicts NFL games — running on real silicon, not a CPU.**
 
 Train an MLP in Python → quantize it → compile it to Verilog → deploy it on a **Basys 3 FPGA**.
-The laptop sends 21 game features over USB-UART; the FPGA runs the whole network in fabric and
-returns win probability + point spread in **~12 ms**.
+The laptop sends 21 game features over USB-UART; the FPGA runs the whole network in fabric —
+**591 cycles, ~5.9 µs, zero jitter** — and returns win probability + point spread in ~3.4 ms
+round-trip.
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Keras](https://img.shields.io/badge/Keras-QKeras%20QAT-D00000?logo=keras&logoColor=white)
@@ -22,18 +23,19 @@ returns win probability + point spread in **~12 ms**.
 > [!NOTE]
 > **The point isn't the football accuracy** — NFL outcomes are close to a coin flip. The point is the
 > **complete, verified path from a Keras model to a running hardware accelerator**, proving at every
-> step that the silicon computes *exactly* what the software does. That verification story is the
-> project.
+> step that the silicon computes *exactly* what the software does. The first hardware build
+> **deadlocked on real silicon** even though every simulation passed — finding out why, fixing it,
+> and getting to bit-exact is the project. Full story: [**PROJECT_DOCUMENT.md**](PROJECT_DOCUMENT.md).
 
 ## ⚡ At a glance
 
 | | |
 |---|---|
-| 🧠 **Model** | 128→64→32 MLP, dual-head (win + spread), **13,218 params** |
-| 🎯 **Accuracy** | **64.5%** win (val) · **9.74 pt** spread MAE — beats the always-home *and* Vegas baselines |
-| 🔩 **Fits** | 86% LUT · 20% DSP · 14% BRAM on a \$150 board |
-| ⏱️ **Speed** | 591-cycle core inference (~6.25 µs); ~12 ms round-trip incl. UART |
-| ✅ **Verified** | **Bit-exact on hardware** — 50/50 games match RTL sim, zero deviation, zero timeouts |
+| 🧠 **Model** | 128→64→32 MLP, dual-head (win + spread), **13,218 params**, 8-bit quantized |
+| 🎯 **Accuracy** | **64.5%** win (val) · **9.74 pt** spread MAE — beats the always-home *and* Vegas-line baselines |
+| 🔩 **Fits** | 17,888 LUT (86%) · 18 DSP (20%) · 7 BRAM on a \$150 board · WNS +0.126 ns @ 100 MHz |
+| ⏱️ **Speed** | 591-cycle core (~5.9 µs, deterministic) · ~3.4 ms round-trip incl. USB-UART |
+| ✅ **Verified** | **Bit-exact on hardware** — 50/50 real games match RTL sim, zero deviation, zero timeouts |
 
 <div align="center">
 
@@ -52,33 +54,99 @@ flowchart LR
 
 </div>
 
----
+## 🖥️ Demo
 
-## 🔬 How it works, end to end
+<!-- TODO: capture a screenshot/GIF of the web UI running an inference and drop it here:
+     ![Web UI](docs/webapp_demo.png) -->
 
-Seven phases. Each has a `PHASE*_COMPLETE.md` writeup with the decisions, bugs, and results in depth.
+Pick any of 6,427 real games (2000–2024) in the web UI, hit **Run** — the 21 feature bytes go
+over UART, the FPGA computes the MLP in fabric, and the raw response bytes come back and are
+graded against the actual result:
 
-### 1 · Data & features — `phase1_data/`
+```
+python phase7_deploy/ui/webapp.py     # → http://127.0.0.1:8713  (Windows, board on COM port)
+```
 
-Twenty-one features per game, engineered from `nflreadpy` schedule data (order locked forever in
-[`artifacts/features.json`](artifacts/features.json)):
+<div align="center">
 
-| Group | Features |
-|---|---|
-| **Team strength** | pre-game Elo (home, away) + their difference |
-| **Recent form** | rolling 4-game avg of pts scored / allowed / diff · win streak · rest days |
-| **Context** | dome · week · season progress · divisional flag · Vegas spread & total · temp · wind |
+```mermaid
+sequenceDiagram
+    participant L as 💻 Laptop
+    participant F as 🔌 FPGA
+    L->>F: 0xAA + 21 feature bytes + XOR checksum  (23 B)
+    Note over F: MLP inference · 591 cycles · 18 DSPs
+    F->>L: 0x55 + win_u8 + spread_i8 + status  (4 B)
+```
 
-> [!IMPORTANT]
-> **The anti-leakage rule.** Every rolling stat uses **`.shift(1)`**, so game *N* only sees games
-> *1…N-1*, and splits are **temporal** (train ≤2020, val 2021–22, test 2023–24). Without this a
-> sports model "sees the future," scores beautifully offline, and collapses in production. Elo is
-> stored **pre-game**, never post-game, for the same reason.
+</div>
 
-### 2 · Model — `phase2_model/`
+`win_prob = win_u8 / 256` (home team) · `spread` = signed int8 · `status` = `0x00` OK /
+`0x01` checksum NACK / `0x02` MLP-watchdog timeout. The UI shows the raw byte (`177/256 = 69.1%`)
+to make clear the number came off the chip, not the laptop.
 
-A small MLP with a **shared trunk** that splits into **two heads** — one classifier (win) and one
-regressor (spread):
+## 🏆 Why this project is interesting
+
+**The silicon is provably correct.** Four independent verification layers — HLS C-sim, RTL
+cosimulation, a 50-game XSIM regression against a Python golden, and the physical board — and the
+board reproduces the simulated RTL **byte-for-byte across all 50 games**. A feature-sweep test
+(inputs that exist in no dataset, output moves smoothly 50%→74%) proves it's computing, not
+replaying a table.
+
+**The hardest bug never showed up in simulation.** The first generated IP passed C-sim and a
+50-game regression, then deadlocked on the board: a sequential FSM around depth-2 FIFOs, a
+template doing 512 destructive reads of a 128-entry stream, and one stream with two consumers.
+The sims had passed only because they'd substituted replay FIFOs that weren't in the bitstream.
+Diagnosed by auditing the generated Verilog line-by-line; fixed by rebuilding on `io_stream`
+dataflow with **RTL cosimulation as a mandatory build gate**. →
+[AUDIT_REPORT.md](AUDIT_REPORT.md) · [POST_AUDIT_REMEDIATION.md](POST_AUDIT_REMEDIATION.md)
+
+**398,705 → 17,888 LUTs across seven documented synthesis runs.** First synthesis was 1,917% of
+the chip (a deprecated pragma silently ignored → weights in LUT ROM). Every subsequent step is
+attributed: BRAM binding, pragma placement, a stream-write drain mux, a DATAFLOW FIFO explosion,
+a reuse-factor mux that grows when you'd expect it to shrink. →
+[phase4_hls/PHASE4_COMPLETE.md](phase4_hls/PHASE4_COMPLETE.md)
+
+**The model is honest.** Temporal splits only (train ≤2020, val 2021–22, test 2023–24), every
+rolling stat behind `.shift(1)` so game *N* never sees its own result, scaler frozen forever, and
+every feature decision made on a 5-seed harness because single-run deltas are noise. 9.74-pt
+spread MAE edges the Vegas opening line's 9.76 on held-out seasons.
+
+## 🚀 Quickstart
+
+**Software / model path** — Python 3.12, no hardware needed:
+
+```bash
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python phase1_data/pipeline.py          # nflreadpy → data/processed/games.parquet
+python phase2_model/train.py            # → artifacts/model_best.keras (already committed)
+python phase3_quantization/quantize.py  # → artifacts/model_quantized.keras
+pytest tests/ -v
+```
+
+> [!NOTE]
+> `games.parquet` is regenerable (needs internet); the trained artifacts (`model_best.keras`,
+> `scaler.pkl`, `features.json`) **are committed** and are the source of truth.
+
+**FPGA / hardware path** — Basys 3 + Vivado 2025.2 (free WebPACK):
+
+```bash
+# 1) synthesize — the verified IP is committed under artifacts/ip_repo/
+#    (edit the absolute paths in phase5_fpga/scripts/*.tcl for your machine)
+vivado -mode batch -source phase5_fpga/scripts/create_project.tcl
+vivado -mode batch -source phase5_fpga/scripts/run_synth.tcl
+
+# 2) program top.bit via Vivado Hardware Manager, then:
+python phase7_deploy/board/verify_uart.py COM8              # smoke test
+python phase7_deploy/validation/golden_vector_test.py COM8  # 50-game bit-exact check
+python phase7_deploy/ui/webapp.py                           # web UI
+```
+
+> [!TIP]
+> One-time FTDI tweak: set the COM port's **Latency Timer 16 → 1 ms** (Device Manager → Advanced).
+> That single driver setting took the round-trip from ~11.5 ms to ~3.4 ms — no HDL change.
+
+## 🏗️ Architecture
 
 <div align="center">
 
@@ -88,8 +156,8 @@ flowchart LR
     H1["<b>Dense 128</b><br/>ReLU"]:::hid
     H2["<b>Dense 64</b><br/>ReLU"]:::hid
     H3["<b>Dense 32</b><br/>ReLU"]:::hid
-    W["<b>Dense 1 · sigmoid</b><br/>▶ win probability [0,1]"]:::win
-    S["<b>Dense 1 · linear</b><br/>▶ point spread (pts)"]:::spread
+    W["<b>Dense 1 · sigmoid</b><br/>▶ win probability"]:::win
+    S["<b>Dense 1 · linear</b><br/>▶ point spread"]:::spread
 
     IN --> H1 --> H2 --> H3
     H3 --> W
@@ -101,240 +169,60 @@ flowchart LR
     classDef spread fill:#f59e0b,color:#000,stroke:#d97706,stroke-width:2px
 ```
 
-*Dropout(0.2) sits between the hidden layers during training only — it vanishes at inference, so it
-never reaches the hardware.*
-
 </div>
 
-> 💡 That **shared 32-unit trunk feeding two heads** is exactly what deadlocked the first FPGA build:
-> in `io_serial` mode the two heads fought over one stream. See [Phase 4](#4--hls--rtl--phase4_hls).
+Hidden layers are **ReLU-only** (one comparator in silicon), scaling is **MinMax [0,1]** (drops
+straight into an unsigned byte → `ap_fixed<18,6>` fractional bits), and Dropout is training-only
+(zero hardware cost). The shared 32-unit trunk feeding two heads is exactly what deadlocked the
+first build — two consumers of one stream.
 
-**13,218 parameters** — tiny on purpose (the 50k budget is what the board's 90 DSPs / 1.8 Mb BRAM can
-hold). Three choices are made **for the hardware, not the math**:
-
-- 🟢 **ReLU-only hidden layers** — `max(0, x)` is *one comparator* in silicon; tanh/sigmoid would cost a
-  lookup table per neuron.
-- 🟢 **MinMaxScaler → [0, 1]** (not StandardScaler) — a [0,1] value drops straight into an unsigned
-  8-bit fixed-point byte (`byte/256`), which is exactly how a feature crosses the UART.
-- 🟢 **Dropout** is training-only → **zero** hardware cost at inference.
-
-<div align="center">
-
-| Metric | Validation (2021–22, 543 games) | Baseline |
-|:---|:---:|:---|
-| **Win accuracy** | **64.5%** | always-home 53.6% · target ≥63% |
-| Win AUC | 0.710 | — |
-| **Spread MAE** | **9.74 pts** | Vegas opening line 9.76 — model edges it |
-
-</div>
-
-*Source: [`phase2_model/PHASE2_COMPLETE.md`](phase2_model/PHASE2_COMPLETE.md). Test-set (2023–24) win
-accuracy is 70.2%, but validation is the honest headline — see [Limitations](#-honest-limitations).*
-
-### 3 · Quantization — `phase3_quantization/`
-
-FPGAs do fixed-point, not float. The model is rebuilt in **QKeras** with quantization-aware training
-and weights snapped to a fixed-point grid (8-bit weights, `<8,4>` ReLU activations — deployed
-precision in [`artifacts/hls_config.json`](artifacts/hls_config.json)). Because the network *trained
-knowing it would be quantized*, the cost is almost nothing:
-
-> **Float → quantized:** win accuracy **−0.2%**, spread MAE **+0.01 pts** — both inside tolerance.
-> *(source: [`phase3_quantization/PHASE3_COMPLETE.md`](phase3_quantization/PHASE3_COMPLETE.md))*
-
-### 4 · HLS → RTL — `phase4_hls/`
-
-`hls4ml` emits C++; Vitis HLS synthesizes it to Verilog for the `xc7a35tcpg236-1` part. One inference
-= **591 cycles (~6.25 µs @ 100 MHz)** (source: HLS `csynth.rpt`).
-
-> [!WARNING]
-> **The bug that taught me the most.** The first build (`io_type='io_serial'`) **deadlocked in
-> hardware**: the final hidden layer feeds *both* output heads, and that shared stream starved one
-> head's FIFO, hanging the pipeline. Fix: regenerate as **`io_stream`** (AXI4-Stream), which splits
-> the shared stream via `nnet::clone_stream`. Caught in **cosimulation** ("max stream depth = 1" → every
-> FIFO drains) — it never reached the board.
-
-### 5 · FPGA integration — `phase5_fpga/`
-
-Hand-written Verilog wraps the MLP IP into a complete design:
+On the FPGA, hand-written Verilog wraps the hls4ml IP:
 
 ```
 top.v
-├── uart_rx.v         8N1 receiver @115200 baud, metastability-hardened
+├── uart_rx.v         8N1 @115200, mid-bit sampling, metastability-hardened
 ├── uart_tx.v         8N1 transmitter
-├── uart_framing.v    SOF detection · XOR checksum · response sequencer
-├── mlp_controller.v  AXI-Stream feature push · ap_ctrl_hs handshake · result capture
-│                     · win saturation · watchdog (reports a timeout instead of hanging)
-└── myproject         the hls4ml MLP IP
+├── uart_framing.v    SOF · XOR checksum · TX sequencer · dropped-byte resync watchdog
+├── mlp_controller.v  packs 21 bytes → one 672-bit AXI-Stream beat · ap_ctrl_hs
+│                     handshake · win saturation · 1 ms inference watchdog
+└── myproject         hls4ml io_stream MLP IP (591-cycle latency)
 ```
 
-<div align="center">
+## 📊 Results
 
-**Synthesis sign-off** — Vivado 2025.2 *(source: [`artifacts/synthesis_report.json`](artifacts/synthesis_report.json))*
+| Layer | Result | Context |
+|:---|:---|:---|
+| Model (val, 543 games) | **64.5%** win acc · AUC 0.710 | always-home 53.6% · Vegas +0.2% gap |
+| Spread (val) | **9.74 pt MAE** | Vegas opening line 9.76 — model edges it |
+| Model (test, 544 games) | 70.2% win acc | held out, evaluated once |
+| Quantization (8-bit QAT) | **−0.2% accuracy** · +0.01 MAE | effectively free |
+| HLS C-sim vs Python | mean Δ 0.047 · max 0.096 | within 0.05/0.10 gates |
+| Vivado post-route | 17,888 LUT (86%) · WNS **+0.126 ns** | HLS *estimated* 28,869 — gate on real numbers |
+| XSIM 50-game regression | 0 timeouts · 40/40 confident winners | win Δ matches predicted fixed-point envelope |
+| **Board, 50 games** | **bit-exact vs sim: max Δ = 0** | zero timeouts, zero framing errors |
+| Round-trip latency | 11.5 ms → **3.4 ms** | FTDI latency-timer 16→1 ms; MLP itself: 6 µs |
 
-| Resource | Used | Available | Utilization |
-|:---|---:|---:|:---:|
-| **LUT** | 17,888 | 20,800 | **86.0%** 🟡 |
-| FF | 29,824 | 41,600 | 71.7% |
-| BRAM | 7 | 50 | 14.0% 🟢 |
-| DSP | 18 | 90 | 20.0% 🟢 |
-| **WNS** | **+0.126 ns** | — | **✅ closes @ 100 MHz** |
-
-</div>
-
-> 💡 The HLS *estimate* screamed 138% LUT — a ~38% overcount. The real gate is the Vivado
-> post-implementation number, which fits with room to spare.
-
-### 6 · Verification — `phase6_sim/`
-
-A ladder of tests, each catching a different failure mode:
-
-```
-① Unit tests ........ each UART/framing/controller module alone      (cocotb + iverilog)
-② HLS C-sim ......... C++ model == Python
-③ HLS cosim ......... generated RTL == C++            ← the deadlock fix was proven here
-④ XSIM regression ... real IP + real controller, 50 games vs golden  → bit-exact, 0 timeouts
-```
-
-The golden is computed on `byte/256` inputs (**what the hardware actually sees**), so any mismatch is
-a *hardware* bug — not an input-quantization artifact hiding in the test.
-
-### 7 · Deployment & on-board bring-up — `phase7_deploy/`
-
-The laptop side: a `pyserial` client, feature encoding, board programming, validation, and **two UIs**
-(a Tkinter desktop app and a local web app with an animated win-probability gauge).
-
-> [!TIP]
-> **The result that matters:** all 50 games run through the *physical board* came back
-> **byte-for-byte identical** to the XSIM simulation — `win |max| = 0`, `spread |max| = 0`, zero
-> timeouts. The silicon reproduces the verified RTL exactly.
-> *(detail: [`phase7_deploy/PHASE7_COMPLETE.md`](phase7_deploy/PHASE7_COMPLETE.md))*
-
-<details>
-<summary><b>Neat engineering detail: how the UI dodges the WSL/Windows split</b></summary>
-
-Feature encoding needs pandas + the scaler (WSL only), but the board's COM port lives on Windows —
-so a single "build features and talk to the board" app can run in *neither* environment. Instead of
-fighting `usbipd` USB-forwarding into WSL, the feature bytes for **every game are precomputed once**
-(in WSL) into `games_catalog.json`. The UIs then need only `pyserial` and run natively on Windows
-against the COM port. The data stack and the serial stack never have to coexist.
-</details>
-
----
-
-## ⏱️ Performance & latency
-
-The MLP core runs in a **fixed 591 clock cycles — ~5.9 µs at 100 MHz — with zero jitter.** Every
-inference takes *exactly* the same time; there's no OS, no runtime, no cache, no scheduler.
-
-<div align="center">
-
-| Inference path | Latency / prediction | Throughput (1 stream) |
-|:---|:---:|:---:|
-| **FPGA core** (591 cyc @ 100 MHz) | **~5.9 µs** · deterministic | **~170,000 / s** |
-| CPU — optimized forward pass (same model) | ~16.9 µs · varies | ~55,000 / s |
-
-<sub>FPGA: HLS `csynth.rpt` (591-cycle latency, 587-cycle initiation interval) × 10 ns clock.
-CPU: measured NumPy forward pass of the identical weights on this machine.</sub>
-
-</div>
-
-> [!NOTE]
-> **The honest takeaway.** For a model this small (13k params), the compute win over an optimized CPU
-> is real but modest (~3×) — and end-to-end the deployed system is actually **UART-bound (~12 ms
-> round-trip)**, not compute-bound. The point of doing inference in fabric here isn't raw speedup;
-> it's **deterministic, real-time inference in dedicated hardware with no CPU, OS, or runtime** — the
-> property that matters for embedded/edge deployment, and the reason FPGAs are used for it at scale.
-
----
-
-## 📡 Communication protocol
-
-<div align="center">
-
-```mermaid
-sequenceDiagram
-    participant L as 💻 Laptop
-    participant F as 🔌 FPGA
-    L->>F: 0xAA + 21 feature bytes + XOR checksum  (23 B)
-    Note over F: MLP inference · 591 cycles
-    F->>L: 0x55 + win_u8 + spread_i8 + status  (4 B)
-```
-
-</div>
-
-`win_prob = win_u8 / 256` (home team's probability) · `spread` = signed int8 · `status` =
-`0x00` OK / `0x01` checksum NACK / `0x02` watchdog timeout. The `0xAA`/`0x55` start-of-frame markers
-let the receiver resync after a dropped byte or a mid-stream power-on.
-
----
-
-## 🚀 Running it yourself
-
-**You need:** Python 3.12 — plus, for the hardware path, a Basys 3 + Vivado 2025.2 (free WebPACK).
-Everything except the physical board and the (regenerable) bitstream is in the repo.
-
-<details open>
-<summary><b>Software / model path</b></summary>
-
-```bash
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-python phase1_data/pipeline.py          # nflreadpy → data/processed/games.parquet
-python phase2_model/train.py            # → artifacts/model_best.keras (already committed)
-python phase3_quantization/quantize.py
-pytest tests/ -v
-```
-> [!NOTE]
-> `data/processed/games.parquet` is **not committed** (regenerable; `nflreadpy` needs internet) —
-> run `pipeline.py` first or the feature tests skip/fail. The trained artifacts
-> (`model_best.keras`, `scaler.pkl`, `features.json`) **are** committed and are the source of truth.
-</details>
-
-<details>
-<summary><b>FPGA / hardware path</b></summary>
-
-```bash
-# 1) synthesize the bitstream — the IP is committed under artifacts/ip_repo/
-#    (edit the absolute paths in phase5_fpga/scripts/*.tcl for your machine first)
-vivado -mode batch -source phase5_fpga/scripts/create_project.tcl
-vivado -mode batch -source phase5_fpga/scripts/run_synth.tcl
-
-# 2) program the board (Vivado Hardware Manager → top.bit), then run inference:
-python phase7_deploy/board/verify_uart.py COM8             # smoke test
-python phase7_deploy/validation/golden_vector_test.py COM8 # 50-game bit-exact check
-python phase7_deploy/ui/webapp.py                          # web UI → http://127.0.0.1:8713
-```
-> [!WARNING]
-> The bitstream (`*.bit`) is **not committed** (large, board-specific) — build it from the committed
-> IP + HDL. A few build/program scripts have **hardcoded Windows paths** (`C:\nfl_fpga_build\...`,
-> `C:\Xilinx\...`) that need editing for your environment.
-</details>
-
----
-
-## 🗂️ Repo map
+## 🗂️ Repo map & documentation
 
 | Path | Contents |
 |---|---|
-| `phase1_data/` … `phase7_deploy/` | The seven phases — each with its own `PHASE*_COMPLETE.md` deep-dive |
-| `artifacts/` | **Committed & sacred:** `model_best.keras`, `scaler.pkl`, `features.json`, synthesized `ip_repo/` |
-| `phase5_fpga/hdl/` | The hand-written Verilog (UART · framing · controller · top) |
-| `phase6_sim/` | cocotb unit tests + the XSIM functional regression |
-| `phase7_deploy/ui/` | Tkinter desktop app + local web app |
+| [`PROJECT_DOCUMENT.md`](PROJECT_DOCUMENT.md) | **The complete technical account** — every decision, alternative, bug, and result |
+| [`AUDIT_REPORT.md`](AUDIT_REPORT.md) / [`POST_AUDIT_REMEDIATION.md`](POST_AUDIT_REMEDIATION.md) | The deadlock forensics and the fix campaign |
+| `phase1_data/` → `phase7_deploy/` | The seven phases — each with a `PHASE*_COMPLETE.md` deep-dive |
+| `artifacts/` | **Committed & sacred:** `model_best.keras` · `scaler.pkl` · `features.json` · verified `ip_repo/` |
+| `phase5_fpga/hdl/` | Hand-written Verilog (UART · framing · controller · top) |
+| `phase6_sim/` | cocotb unit tests + the real-IP XSIM functional regression |
+| `phase7_deploy/ui/` | Tkinter desktop app + stdlib-only web app |
 | `tests/` | pytest suites, one per phase |
-
----
 
 ## ⚖️ Honest limitations
 
 > [!WARNING]
-> - **Prediction quality is modest by design.** ~64.5% val accuracy and ~9.7 pt MAE sit near the
->   practical ceiling for NFL prediction from schedule-level features — this is a *systems* project,
->   not a betting edge.
-> - **The board is volatile** — the bitstream reloads on every power cycle, and the USB-UART port can
->   drop on a loose connection.
-> - **Not fully clone-and-go for hardware** — you synthesize the bitstream yourself, own a Basys 3,
->   and adjust a few hardcoded paths. The software/model half *is* reproducible from `nflreadpy`.
+> - **Prediction quality is modest by design** — ~64.5% / 9.7 pt MAE is near the practical ceiling
+>   for schedule-level features. This is a *systems* project, not a betting edge.
+> - **The bitstream is volatile** — reprogram after every power cycle.
+> - **Not clone-and-go for hardware** — you synthesize the bitstream yourself, own a Basys 3, and
+>   fix a few hardcoded paths. The software half *is* fully reproducible.
 
 ---
 
@@ -342,8 +230,8 @@ python phase7_deploy/ui/webapp.py                          # web UI → http://1
 
 ### 🛠️ Stack
 
-**Python** · nflreadpy · pandas · numpy · scikit-learn · TensorFlow/Keras · QKeras · hls4ml · pyserial · pytest
-**FPGA** · Vivado / Vitis HLS 2025.2 · Verilog · Basys 3 (Artix-7 XC7A35T) · USB-UART @ 115200 baud
+**Python** · nflreadpy · pandas · scikit-learn · TensorFlow/Keras · QKeras · hls4ml · pyserial · pytest
+**FPGA** · Vivado / Vitis HLS 2025.2 · Verilog · Basys 3 (Artix-7 XC7A35T) · USB-UART @ 115200
 
 *From `pandas` to `.bit` — and verified bit-exact on the way down.*
 
