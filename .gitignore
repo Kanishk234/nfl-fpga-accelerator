@@ -1,8 +1,6 @@
-*.md
-!README.md
-# Per-phase completion writeups are part of the project's story — ship them.
-# (Other .md files — progress notes, audits, status scratch — stay ignored.)
-!**/PHASE*_COMPLETE.md
+PROJECT_DOCUMENT.md
+CLAUDE.md
+plans/
 .claude/
 
 # Data directories (regenerable from nflreadpy)
