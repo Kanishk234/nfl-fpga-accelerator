@@ -1,0 +1,30 @@
+{
+  "model": "stacked-xgboost",
+  "stage1": "XGBClassifier -> home_win",
+  "stage2": "XGBRegressor(features + win_prob) -> (spread - vegas_spread); final = vegas_spread + tree",
+  "win_best_iteration": 114,
+  "spread_best_iteration": 30,
+  "validation": {
+    "accuracy": 0.6335174953959485,
+    "auc": 0.7063219331260568,
+    "spread_mae": 9.760344505310059
+  },
+  "test": {
+    "accuracy": 0.6875,
+    "auc": 0.7224825632083698,
+    "spread_mae": 9.772841453552246
+  },
+  "baselines": {
+    "home_win": 0.57,
+    "vegas_spread_mae_val": 9.763351440429688
+  },
+  "mlp_reference": {
+    "val_accuracy": 0.645,
+    "val_spread_mae": 9.74
+  },
+  "honest_gates": {
+    "win_acc": 0.63,
+    "spread_mae": "beat Vegas baseline (~9.76)"
+  },
+  "val_passed": true
+}
