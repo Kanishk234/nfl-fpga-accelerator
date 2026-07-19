@@ -139,6 +139,13 @@ if __name__ == '__main__':
     with open(f'{OUT_DIR}/tb_inputs.mem', 'w') as f:
         f.write('\n'.join(f'{v:06x}' for v in q) + '\n')
 
+    # Expected outputs as fixed-point words, 2 per game (win_prob, spread) —
+    # lets the UART-level testbench self-check bit-exactly.
+    gp = np.round(prob[:n] * SCALE).astype(np.int64) & 0xFFFFFF
+    gs = np.round(spread[:n] * SCALE).astype(np.int64) & 0xFFFFFF
+    with open(f'{OUT_DIR}/golden_fixed.mem', 'w') as f:
+        f.write('\n'.join(f'{p:06x}\n{s:06x}' for p, s in zip(gp, gs)) + '\n')
+
     with open(f'{OUT_DIR}/sigmoid_lut.mem', 'w') as f:
         f.write('\n'.join(f'{v:03x}' for v in lut) + '\n')
 
