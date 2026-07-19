@@ -52,6 +52,17 @@ def patch_testbench(outdir, project):
         f.write(patched)
     print(f"  patched {tb} + {hdr} (dropped tree_scores arg)")
 
+    # Project convention is Verilog (UART wrapper, MLP flow, cosim all Verilog);
+    # conifer's stock vivado_synth.tcl points at the equivalent vhdl output.
+    vs = os.path.join(outdir, 'vivado_synth.tcl')
+    with open(vs) as f:
+        src = f.read()
+    patched = src.replace('syn/vhdl', 'syn/verilog')
+    assert patched != src, f'vhdl path not found in {vs}'
+    with open(vs, 'w') as f:
+        f.write(patched)
+    print(f"  patched {vs} (vhdl -> verilog)")
+
 
 def emit(booster, name):
     cfg = conifer.backends.xilinxhls.auto_config()
