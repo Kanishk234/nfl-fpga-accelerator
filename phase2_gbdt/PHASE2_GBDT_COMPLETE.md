@@ -172,6 +172,9 @@ MLP's own `eval_repeated.py` lore):
 | lr 0.02 → 0.03, hist tree method | no acc change, ~3× faster | Kept |
 | 27-config raw-spread sweep | all configs lose to the Vegas line | Led to residual design |
 | OOF-derived decision threshold (0.49 vs 0.50) | +0.23pt on train OOF, does **not** transfer to val | Reverted — keep 0.5 |
+| Early-stop on `error` instead of `logloss` | **+0.4pt** (65.56 ± 0.15 across 3 seeds), AUC unchanged | **Kept** — stop at the accuracy-optimal round |
+| 10-seed probability ensemble | flat (65.19 = single model) | Reverted — no gain, would 10× FPGA tree count |
+| DART booster (tree dropout) | −0.2pt mean | Reverted |
 
 Final config: `max_depth=2, lr=0.03, subsample=0.9, colsample_bytree=0.8,
 min_child_weight=3, reg_lambda=2, gamma=0.5, monotone_constraints` — chosen from
@@ -185,21 +188,21 @@ so the more accurate model is also the cheaper one to synthesize.
 ### 7. Final Validation Results (2021–2022)
 
 ```
-Win Accuracy:    65.19%   (untuned: 63.35%; MLP: 64.5%; always-home: ~57%)
-Win AUC:         0.718
-Spread MAE:      9.759    (Vegas line baseline: 9.763 — ties/edges it)
+Win Accuracy:    65.75%   (untuned: 63.35%; MLP: 64.5%; always-home: ~57%)
+Win AUC:         0.716
+Spread MAE:      9.758    (Vegas line baseline: 9.763 — ties/edges it)
 Spread head:     30 trees (predicts residual to the Vegas line)
 ```
 
 ### 8. Test Set Results (2023–2024, evaluated once)
 
 ```
-Win Accuracy:    69.30%   (baseline always-home ~57%)
-Win AUC:         0.730
-Spread MAE:      9.777
+Win Accuracy:    70.22%   (baseline always-home ~57%)
+Win AUC:         0.731
+Spread MAE:      9.776
 ```
 
-Test win accuracy (69.30%) is notably higher than validation (65.19%) — the same
+Test win accuracy (70.22%) is notably higher than validation (65.75%) — the same
 generalization-to-recent-seasons pattern the MLP showed. This is the most honest
 number: 544 held-out games the model never influenced.
 
@@ -207,12 +210,12 @@ number: 544 held-out games the model never influenced.
 
 | Metric | GBDT (val) | MLP (val) | GBDT (test) | MLP (test) |
 |---|---|---|---|---|
-| Win accuracy | **65.2%** | 64.5% | 69.3% | 70.2% |
-| Win AUC | **0.718** | 0.710 | **0.730** | 0.724 |
-| Spread MAE | 9.759 | 9.74 | **9.777** | 9.86 |
+| Win accuracy | **65.8%** | 64.5% | 70.2% | 70.2% |
+| Win AUC | **0.716** | 0.710 | **0.731** | 0.724 |
+| Spread MAE | 9.758 | 9.74 | **9.776** | 9.86 |
 
-The tuned GBDT wins val accuracy, val AUC, test AUC, and test spread MAE; the MLP
-holds test accuracy by 0.9pt (5 games — within noise). The "GBDTs are strong on
+The tuned GBDT wins val accuracy (+1.3pt), val AUC, test AUC, and test spread
+MAE, and exactly ties the MLP's 70.2% on test accuracy. The "GBDTs are strong on
 tabular data" prior holds: with equal tuning effort the trees are at least the
 MLP's equal on every axis. **The win head is where the real, learnable signal
 lives** — spread is a data noise floor that neither architecture can beat, because

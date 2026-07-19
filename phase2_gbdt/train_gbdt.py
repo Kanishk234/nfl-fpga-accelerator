@@ -123,7 +123,10 @@ def build_win_model(features):
         monotone_constraints=mono,
         tree_method='hist',
         objective='binary:logistic',
-        eval_metric='logloss',
+        # Early-stop on classification error, not logloss: stops at the
+        # accuracy-optimal round. +0.4pt val acc across 3 seeds vs logloss
+        # stopping, AUC unchanged.
+        eval_metric='error',
         early_stopping_rounds=40,
         random_state=SEED,
         n_jobs=2,
