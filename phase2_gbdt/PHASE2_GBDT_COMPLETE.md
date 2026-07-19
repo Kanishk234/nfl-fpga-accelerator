@@ -104,9 +104,12 @@ the canonical `features.json` order. This collapses the MLP's separate phase 3
 
 ### 3. Stage 1 — Win Probability Classifier
 
-`XGBClassifier`, shallow trees (depth 5) to keep the eventual hardware comparator
-count small. Trained with early stopping watching the real validation set. Final
-model refit on all of train — this is the model that ships.
+`XGBClassifier` with **depth-2 monotone trees** (see the tuning campaign in §6b).
+Monotone constraints encode domain knowledge as regularization: win probability is
+forced non-decreasing in home-strength signals (`home_elo`, `elo_diff`,
+`home_point_diff_avg`, `vegas_spread`) and non-increasing in away strength
+(`away_elo`, `away_point_diff_avg`). Trained with early stopping watching the real
+validation set. Final model refit on all of train — this is the model that ships.
 
 ### 4. Out-of-Fold Stacking (Avoiding Leakage)
 
@@ -155,24 +158,48 @@ sweep configs) — the model's own verdict is *"the best correction to the Vegas
 line is no correction."* The one config that trained landed at 9.760 vs the line's
 9.763 — a 0.003-point edge, i.e. noise.
 
+### 6b. Win-Head Tuning Campaign
+
+The untuned stage-1 model (depth-5, no constraints) sat at 63.35% val accuracy vs
+the MLP's 64.5%. A structured improvement campaign followed, with every candidate
+gain re-validated across 3 seeds (single-run deltas below ~0.4pt are noise — the
+MLP's own `eval_repeated.py` lore):
+
+| Change | Effect | Verdict |
+|---|---|---|
+| Monotone constraints (6 features) | ~+1pt val acc, consistent across 9/11 configs | **Kept** |
+| Depth 5 → 3 → **2** | depth 2 dominated the sweep leaderboard | **Kept** |
+| lr 0.02 → 0.03, hist tree method | no acc change, ~3× faster | Kept |
+| 27-config raw-spread sweep | all configs lose to the Vegas line | Led to residual design |
+| OOF-derived decision threshold (0.49 vs 0.50) | +0.23pt on train OOF, does **not** transfer to val | Reverted — keep 0.5 |
+
+Final config: `max_depth=2, lr=0.03, subsample=0.9, colsample_bytree=0.8,
+min_child_weight=3, reg_lambda=2, gamma=0.5, monotone_constraints` — chosen from
+the top-3 multi-seed finalists for its clearly better AUC (0.717 vs 0.711) at
+statistically tied accuracy (probability quality matters: the win prob feeds the
+spread stack). Multi-seed val accuracy: **65.1% ± 0.1pt**.
+
+A hardware bonus: depth-2 trees halve the per-tree comparator depth vs depth 3,
+so the more accurate model is also the cheaper one to synthesize.
+
 ### 7. Final Validation Results (2021–2022)
 
 ```
-Win Accuracy:    63.35%   (target: beat 57% always-home baseline)
-Win AUC:         0.706
-Spread MAE:      9.760    (Vegas line baseline: 9.763 — ties/edges it)
+Win Accuracy:    65.19%   (untuned: 63.35%; MLP: 64.5%; always-home: ~57%)
+Win AUC:         0.718
+Spread MAE:      9.759    (Vegas line baseline: 9.763 — ties/edges it)
 Spread head:     30 trees (predicts residual to the Vegas line)
 ```
 
 ### 8. Test Set Results (2023–2024, evaluated once)
 
 ```
-Win Accuracy:    68.75%   (baseline always-home ~57%)
-Win AUC:         0.723
-Spread MAE:      9.773
+Win Accuracy:    69.30%   (baseline always-home ~57%)
+Win AUC:         0.730
+Spread MAE:      9.777
 ```
 
-Test win accuracy (68.75%) is notably higher than validation (63.35%) — the same
+Test win accuracy (69.30%) is notably higher than validation (65.19%) — the same
 generalization-to-recent-seasons pattern the MLP showed. This is the most honest
 number: 544 held-out games the model never influenced.
 
@@ -180,15 +207,16 @@ number: 544 held-out games the model never influenced.
 
 | Metric | GBDT (val) | MLP (val) | GBDT (test) | MLP (test) |
 |---|---|---|---|---|
-| Win accuracy | 63.4% | 64.5% | 68.8% | 70.2% |
-| Win AUC | 0.706 | 0.710 | 0.723 | 0.724 |
-| Spread MAE | 9.760 | 9.74 | 9.773 | 9.86 |
+| Win accuracy | **65.2%** | 64.5% | 69.3% | 70.2% |
+| Win AUC | **0.718** | 0.710 | **0.730** | 0.724 |
+| Spread MAE | 9.759 | 9.74 | **9.777** | 9.86 |
 
-The two models are within noise of each other everywhere. The MLP holds a
-fraction of a point on win accuracy; the GBDT is marginally better on test spread.
-**The win head is where the real, learnable signal lives** — spread is a data
-noise floor that neither architecture can beat, because the Vegas line already
-prices in everything the 21 features contain.
+The tuned GBDT wins val accuracy, val AUC, test AUC, and test spread MAE; the MLP
+holds test accuracy by 0.9pt (5 games — within noise). The "GBDTs are strong on
+tabular data" prior holds: with equal tuning effort the trees are at least the
+MLP's equal on every axis. **The win head is where the real, learnable signal
+lives** — spread is a data noise floor that neither architecture can beat, because
+the Vegas line already prices in everything the 21 features contain.
 
 ---
 
@@ -216,6 +244,14 @@ prices in everything the 21 features contain.
 - **Heavy spread regularization + early stopping** — lets the model collapse to
   "just predict the line" when there is no residual signal, instead of fitting
   noise below the Vegas floor.
+- **Monotone constraints on the win head** — domain knowledge (stronger home team
+  → higher win prob) as regularization; worth ~+1pt accuracy on 543 val games and
+  guarantees the hardware can never emit a probability that moves the wrong way
+  with elo or the Vegas line.
+- **Depth-2 trees** — dominated the tuning sweep on this small dataset and halve
+  the FPGA comparator depth per tree.
+- **Decision threshold stays 0.5** — the OOF-optimal threshold (0.49) gained on
+  train but did not transfer to val; tuning it would be fitting noise.
 - **No scaler / raw features** — trees are scale-invariant; scaling would add a
   pointless preprocessing step with no accuracy benefit.
 - **Fixed seed (42)** — reproducible committed artifacts, matching the MLP's

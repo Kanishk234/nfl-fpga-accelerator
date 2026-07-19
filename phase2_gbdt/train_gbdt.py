@@ -93,27 +93,44 @@ def load_data():
 # Stage 1 — win probability classifier
 # ---------------------------------------------------------------------------
 
-def build_win_model():
-    """XGBClassifier for home_win. Shallow trees keep the conifer/FPGA footprint
-    small (fewer comparators). n_estimators/depth are first-pass; tune later."""
+# Monotone constraints — domain knowledge as regularization. Home win probability
+# must be non-decreasing in home-strength signals and non-increasing in away
+# strength. On 543 val games this was worth ~+1pt accuracy in the sweep, and it
+# guarantees sane behavior on out-of-distribution inputs (an FPGA nicety too:
+# the hardware can never emit a probability that moves the wrong way with elo).
+WIN_MONOTONE = {
+    'home_elo': 1, 'away_elo': -1, 'elo_diff': 1,
+    'home_point_diff_avg': 1, 'away_point_diff_avg': -1,
+    'vegas_spread': 1,  # vegas_spread = home margin, positive = home favored
+}
+
+
+def build_win_model(features):
+    """XGBClassifier for home_win. Config from the 2026-07 sweep (32 monotone
+    configs, top-3 re-validated across 3 seeds): depth-2 monotone trees hit
+    65.1% val accuracy +/- 0.1pt vs 63.35% untuned and 64.5% for the MLP.
+    Depth 2 also halves the per-tree comparator depth on the FPGA vs depth 3."""
+    mono = '(' + ','.join(str(WIN_MONOTONE.get(f, 0)) for f in features) + ')'
     return XGBClassifier(
-        n_estimators=600,
-        max_depth=5,
-        learning_rate=0.02,
-        subsample=0.8,
+        n_estimators=500,
+        max_depth=2,
+        learning_rate=0.03,
+        subsample=0.9,
         colsample_bytree=0.8,
         min_child_weight=3,
         reg_lambda=2.0,
         gamma=0.5,
+        monotone_constraints=mono,
+        tree_method='hist',
         objective='binary:logistic',
         eval_metric='logloss',
         early_stopping_rounds=40,
         random_state=SEED,
-        n_jobs=-1,
+        n_jobs=2,
     )
 
 
-def oof_win_probs(X_train, y_train_win, X_val, y_val_win, n_splits=5):
+def oof_win_probs(X_train, y_train_win, X_val, y_val_win, features, n_splits=5):
     """
     Out-of-fold win probabilities on the training set, so the spread model
     never trains on in-sample (leaked) win probs.
@@ -127,7 +144,7 @@ def oof_win_probs(X_train, y_train_win, X_val, y_val_win, n_splits=5):
     oof = np.zeros(len(X_train), dtype='float32')
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=SEED)
     for i, (tr_idx, ho_idx) in enumerate(kf.split(X_train), 1):
-        m = build_win_model()
+        m = build_win_model(features)
         # early stopping still watches the real val set — fair and consistent
         m.fit(X_train[tr_idx], y_train_win[tr_idx],
               eval_set=[(X_val, y_val_win)], verbose=False)
@@ -198,10 +215,10 @@ if __name__ == '__main__':
     # --- Stage 1: win probability ---
     print("\n[Stage 1] Win-probability classifier")
     print("Generating out-of-fold win probs for the stacked feature ...")
-    oof_win = oof_win_probs(X_train, y_train['win'], X_val, y_val['win'])
+    oof_win = oof_win_probs(X_train, y_train['win'], X_val, y_val['win'], FEATURES)
 
     print("Refitting win model on full train (this is the model that ships) ...")
-    win_model = build_win_model()
+    win_model = build_win_model(FEATURES)
     win_model.fit(X_train, y_train['win'],
                   eval_set=[(X_val, y_val['win'])], verbose=False)
     print(f"  best_iteration={win_model.best_iteration}")

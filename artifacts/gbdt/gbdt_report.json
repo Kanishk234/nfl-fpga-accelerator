@@ -2,17 +2,17 @@
   "model": "stacked-xgboost",
   "stage1": "XGBClassifier -> home_win",
   "stage2": "XGBRegressor(features + win_prob) -> (spread - vegas_spread); final = vegas_spread + tree",
-  "win_best_iteration": 114,
+  "win_best_iteration": 84,
   "spread_best_iteration": 30,
   "validation": {
-    "accuracy": 0.6335174953959485,
-    "auc": 0.7063219331260568,
-    "spread_mae": 9.760344505310059
+    "accuracy": 0.6519337016574586,
+    "auc": 0.7180766923034965,
+    "spread_mae": 9.758651733398438
   },
   "test": {
-    "accuracy": 0.6875,
-    "auc": 0.7224825632083698,
-    "spread_mae": 9.772841453552246
+    "accuracy": 0.6930147058823529,
+    "auc": 0.7300907258064517,
+    "spread_mae": 9.776552200317383
   },
   "baselines": {
     "home_win": 0.57,
