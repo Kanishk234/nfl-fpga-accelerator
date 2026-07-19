@@ -24,6 +24,10 @@ build/
 phase4_hls/hls_project/
 phase5_fpga/vivado_project/
 
+# conifer generated projects (regenerable by smoke_test.py / convert scripts)
+phase4_conifer/smoke_*/
+*.so
+
 # Jupyter
 .ipynb_checkpoints/
 notebooks/.ipynb_checkpoints/
