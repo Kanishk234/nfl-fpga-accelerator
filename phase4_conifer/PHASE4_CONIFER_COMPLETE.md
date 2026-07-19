@@ -198,8 +198,22 @@ policy: *never gate a fit decision on the csynth estimate; always run
 
 ## Remaining Work
 
+Phase 5+ work follows the `_conifer` sibling-folder convention: modified
+phases get `phase5_fpga_conifer/`, `phase6_sim_conifer/`, `phase7_deploy_conifer/`
+— the MLP originals stay untouched for the 1:1 comparison.
+
+**Done ahead of phase 5** (lives in `phase6_sim_conifer/` per the MLP
+precedent that golden generation is verification work): `make_chain_golden.py`
+models the full chained pipeline — stage 1 → hardware sigmoid ROM → stage 2 →
+`+ vegas_spread` — and locks the sigmoid spec (1024-entry × 12-bit ROM over
+margin ∈ [−8, 8), index = `(m + 32768) >> 6`, `sigmoid_lut.mem` emitted for
+`$readmemh`). Chaining costs nothing: win acc **65.38%** (identical to
+per-stage), spread MAE **9.7697** (vs 9.7707 with float probs). Goldens at
+every tap point (margin / win_prob / residual / final spread) are in
+`phase6_sim_conifer/chain_golden/`.
+
 | Step | What | Gate |
 |---|---|---|
-| Two-stage wrapper | Chain stage1 → sigmoid → stage2, `+ vegas_spread` adder, AXIS interface matching the phase 5 UART plumbing | XSIM golden vectors bit-exact vs `golden_cpp.npy` |
+| Two-stage wrapper (`phase5_fpga_conifer/`) | Chain stage1 → sigmoid ROM → stage2, `+ vegas_spread` adder, AXIS interface matching the phase 5 UART plumbing | XSIM bit-exact vs `phase6_sim_conifer/chain_golden/` |
 | Vivado implementation | Full impl of the combined design | Timing met; fits with UART wrapper |
-| Board deploy | Reuse phase 7 pyserial harness; head-to-head latency + resource table vs MLP | Bit-exact vs golden; honest UART-bound framing |
+| Board deploy (`phase7_deploy_conifer/`) | Reuse phase 7 pyserial harness; head-to-head latency + resource table vs MLP | Bit-exact vs golden; honest UART-bound framing |
