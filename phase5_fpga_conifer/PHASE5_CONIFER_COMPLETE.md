@@ -1,9 +1,9 @@
 # Phase 5 (conifer) — Two-Stage GBDT Wrapper + Vivado Integration
 
-> **Status: IN PROGRESS** — wrapper HDL is ✅ written and ✅ XSIM-verified
-> bit-exact (100/100 games); Vivado synthesis/implementation/bitstream and the
-> UART-level sim remain. This doc is updated as the phase advances and
-> finalizes when the phase does.
+> **Status: COMPLETE** — wrapper HDL ✅ written, ✅ XSIM chain regression
+> bit-exact (100/100 games), ✅ full-UART sim PASS, ✅ Vivado implementation:
+> timing met (WNS +0.965 ns), **12,095 LUTs (58%)**, bitstream built.
+> Board deploy is phase 7 (`phase7_deploy_conifer/`).
 
 This is the GBDT analog of `phase5_fpga/` (MLP UART integration). The MLP
 originals are untouched — everything modified lives here, per the `_conifer`
@@ -75,10 +75,42 @@ rounds — a 1-ulp input skew that would have broken board bit-exactness
 "mysteriously." Fix: the golden pre-quantizes inputs to `round(x*4096)` — the
 exact words the UART carries (`chain_golden/tb_inputs.mem`).
 
+## Full-UART Sim — PASS
+
+`phase6_sim_conifer/run_xsim_uart_gbdt.bat` (`tb_top_uart_gbdt.v`) drives the
+**entire `top_gbdt`** over real 115200-baud UART in XSIM — serializes the
+65-byte request bit-by-bit into `uart_rxd`, deserializes the 8-byte response
+from `uart_txd`, and self-checks against `golden_fixed.mem`:
+
+- 3 games: **bit-exact** win_prob + spread words, status `0x00`, LEDs correct
+- Corrupted checksum → NACK status `0x01`
+- SOF-collision (all 63 feature bytes = `0xAA`) → treated as data, status `0x00`
+
+## Vivado Implementation — Timing Met, Bitstream Built
+
+Full flow (`build_all.tcl` → synth → multi-driven-net guard → impl →
+bitstream) on the real device, 100 MHz:
+
+| | GBDT (this design) | MLP (`phase5_fpga`) |
+|---|---|---|
+| Slice LUTs | **12,095 (58.15%)** | 17,896 (86%) |
+| Slice Registers | 18,956 (45.6%) | — |
+| DSPs | **0** | uses DSPs |
+| BRAM | 0.5 tile (sigmoid ROM) | uses BRAM |
+| WNS | **+0.965 ns** | +0.145 ns |
+| Inference latency | 22 cycles / 220 ns | ~1,800 cycles |
+
+The full two-stage GBDT design with UART wrapper is smaller, faster, and has
+6.7× more timing slack than the MLP. Wrapper overhead over the bare IPs
+(11,869 LUTs) is just 226 LUTs.
+
+Bitstream: `C:/nfl_gbdt_build/nfl_gbdt_accelerator.runs/impl_1/top_gbdt.bit`
+(build dir is Windows-local, not in the repo; regenerate via
+`scripts/build_all.tcl`). Reports: `scripts/utilization_report.txt`,
+`scripts/timing_report.txt` (committed).
+
 ## Remaining Work
 
 | Step | What | Gate |
 |---|---|---|
-| UART-level sim | `tb_top_uart`-style test of `uart_framing_conifer` + `top_gbdt` (the chain regression stops at the controller boundary) | correct packet/NACK/timeout behavior |
-| Vivado impl | Windows: `create_project.tcl` → `run_synth.tcl` | timing met; fits (IPs alone were 11,869 LUT / 57% — wrapper overhead expected small) |
-| Board deploy | `phase7_deploy_conifer/` pyserial harness (new 65-byte packet) | bit-exact vs golden on hardware |
+| Board deploy | `phase7_deploy_conifer/` pyserial harness (new 65-byte packet, COM8) | bit-exact vs golden on hardware; honest UART-bound latency framing |
