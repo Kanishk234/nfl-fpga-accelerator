@@ -24,8 +24,11 @@ build/
 phase4_hls/hls_project/
 phase5_fpga/vivado_project/
 
-# conifer generated projects (regenerable by smoke_test.py / convert scripts)
+# conifer generated projects (regenerable: smoke_test.py, precision_scan.py,
+# convert_hls.py + make_tb_data.py — from the committed artifacts/gbdt models)
 phase4_conifer/smoke_*/
+phase4_conifer/scan_*/
+phase4_conifer/hls_*/
 *.so
 
 # Jupyter
