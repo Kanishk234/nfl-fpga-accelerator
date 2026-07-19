@@ -88,7 +88,11 @@ if __name__ == '__main__':
     FEAT = json.load(open('artifacts/features.json'))['features']
     vi = FEAT.index('vegas_spread')
     va = games[games['season'].isin([2021, 2022])]
-    X = va[FEAT].values.astype('float32')
+    # Pre-quantize the inputs to the ap_fixed<24,12> grid. The UART protocol
+    # sends round(x*4096), so the hardware sees EXACTLY these values; feeding
+    # raw floats here would let the C++ emulation truncate (AP_TRN) where the
+    # host rounds — a 1-ulp input skew that breaks bit-exactness.
+    X = quant(va[FEAT].values.astype('float32'))
     y_win = va['home_win'].values.astype('int32')
     y_spread = va['spread'].values.astype('float32')
 
@@ -103,7 +107,7 @@ if __name__ == '__main__':
     prob = hw_sigmoid(margin, lut)
     X22 = np.column_stack([X, prob]).astype('float64')
     residual = np.asarray(spr_c.decision_function(X22)).squeeze()
-    spread = residual + quant(X[:, vi])
+    spread = residual + X[:, vi]          # X is already on the fixed grid
 
     acc = float(np.mean((margin > 0) == y_win))
     mae = float(np.mean(np.abs(spread - y_spread)))
@@ -128,6 +132,12 @@ if __name__ == '__main__':
     np.savetxt(f'{OUT_DIR}/golden_spread.dat', spread[:n], fmt='%.8f')
     np.save(f'{OUT_DIR}/golden_chain.npy',
             np.column_stack([margin, prob, residual, spread])[:n])
+
+    # XSIM testbench inputs: 24-bit two's-complement hex, game-major, feature 0
+    # first — the EXACT fixed-point words the UART protocol carries.
+    q = (np.round(X[:n] * SCALE).astype(np.int64) & 0xFFFFFF).reshape(-1)
+    with open(f'{OUT_DIR}/tb_inputs.mem', 'w') as f:
+        f.write('\n'.join(f'{v:06x}' for v in q) + '\n')
 
     with open(f'{OUT_DIR}/sigmoid_lut.mem', 'w') as f:
         f.write('\n'.join(f'{v:03x}' for v in lut) + '\n')
