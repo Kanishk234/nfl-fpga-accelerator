@@ -1,6 +1,6 @@
 # Phase 6 — Honest functional verification (real io_stream IP)
 
-These tests run the **real** hls4ml `io_stream` IP (from `artifacts/ip_repo/`) together with the
+These tests run the **real** hls4ml `io_stream` IP (from `artifacts/mlp/ip_repo/`) together with the
 **real** hand-written HDL and check outputs against a Python golden across real NFL games. They
 were added when Phase 4 was re-synthesized with `io_type='io_stream'` (the io_serial design
 deadlocked in hardware — see `AUDIT_REPORT.md` §1). The original cocotb regression in `../cocotb/`
@@ -41,7 +41,7 @@ MLP-side or controller bug. This suite closes that gap.
 
 ## Why XSIM, not iverilog
 
-iverilog *compiles* the real IP (`iverilog -g2012 -I artifacts/ip_repo/hdl/verilog ...`) but is the
+iverilog *compiles* the real IP (`iverilog -g2012 -I artifacts/mlp/ip_repo/hdl/verilog ...`) but is the
 wrong tool here: ~5 minutes per game on this large HLS netlist (257-input sparsemuxes, 128-wide
 layers), and X-pessimistic — HLS RTL doesn't reset every datapath register, so iverilog yields `x`
 outputs on bring-up even though the *same* RTL passes XSIM cosim with correct data. XSIM is compiled

@@ -73,7 +73,7 @@ def quantization_aware_finetune(qkeras_model, X_train, X_val, y_train, y_val):
             restore_best_weights=True,
         ),
         keras.callbacks.ModelCheckpoint(
-            filepath='artifacts/model_quantized.keras',
+            filepath='artifacts/mlp/model_quantized.keras',
             monitor='val_win_accuracy',
             mode='max',
             save_best_only=True,
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     print(f"Feature count verified: {N_FEATURES}")
 
     # 2. Load artifacts — scaler is never refit
-    fp32_model = keras.models.load_model('artifacts/model_best.keras')
+    fp32_model = keras.models.load_model('artifacts/mlp/model_best.keras')
     with open('artifacts/scaler.pkl', 'rb') as f:
         scaler = pickle.load(f)
     games = pd.read_parquet('data/processed/games.parquet')

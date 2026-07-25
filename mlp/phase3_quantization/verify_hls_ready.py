@@ -117,7 +117,7 @@ def verify_hls_ready(model, quantization_report):
     quantization_report['est_dsps_unrolled']         = int(est_dsps)
     quantization_report['recommended_reuse_factor']  = int(rec_reuse)
 
-    with open('artifacts/quantization_report.json', 'w') as f:
+    with open('artifacts/mlp/quantization_report.json', 'w') as f:
         json.dump(quantization_report, f, indent=2)
 
     assert all_pass, "hls4ml readiness checks failed — see output above"

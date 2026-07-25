@@ -43,7 +43,7 @@ def artifacts():
 
     model = build_quantized_model(n_features=len(features))
     compile_quantized_model(model)
-    model.load_weights('artifacts/model_quantized.keras')
+    model.load_weights('artifacts/mlp/model_quantized.keras')
 
     return {
         'model':    model,
@@ -131,8 +131,8 @@ class TestGeneratedCPP:
 
 class TestArtifacts:
     def test_hls_config_saved(self):
-        assert os.path.isfile('artifacts/hls_config.json')
-        config = json.load(open('artifacts/hls_config.json'))
+        assert os.path.isfile('artifacts/mlp/hls_config.json')
+        config = json.load(open('artifacts/mlp/hls_config.json'))
         rf = config['reuse_factor']
         # rf is a per-layer dict; check hidden dense layers use meaningful reuse (>=147 each)
         dense_rfs = [rf[k] for k in ('dense_1', 'dense_2', 'dense_3')]
@@ -152,9 +152,9 @@ class TestArtifacts:
 class TestCSimResults:
     @pytest.fixture(autouse=True)
     def report(self):
-        assert os.path.isfile('artifacts/hls_resource_report.json'), \
+        assert os.path.isfile('artifacts/mlp/hls_resource_report.json'), \
             "hls_resource_report.json missing — run convert.py"
-        self._report = json.load(open('artifacts/hls_resource_report.json'))
+        self._report = json.load(open('artifacts/mlp/hls_resource_report.json'))
 
     def test_csim_mean_delta_within_tolerance(self):
         delta = self._report.get('csim_mean_delta')
@@ -174,9 +174,9 @@ class TestCSimResults:
 class TestSynthesisResults:
     @pytest.fixture(autouse=True)
     def report(self):
-        assert os.path.isfile('artifacts/hls_resource_report.json'), \
+        assert os.path.isfile('artifacts/mlp/hls_resource_report.json'), \
             "hls_resource_report.json missing — run resource_report.py"
-        self._report = json.load(open('artifacts/hls_resource_report.json'))
+        self._report = json.load(open('artifacts/mlp/hls_resource_report.json'))
         if 'resources' not in self._report:
             pytest.skip("Synthesis not yet run — open project in Windows Vitis HLS, "
                         "run C Synthesis + Export, then run resource_report.py")

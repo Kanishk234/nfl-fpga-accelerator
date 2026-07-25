@@ -15,7 +15,7 @@ import pytest
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 FUNC = os.path.join(ROOT, 'mlp/phase6_sim', 'functional')
 COCOTB = os.path.join(ROOT, 'mlp/phase6_sim', 'cocotb')
-IPV  = os.path.join(ROOT, 'artifacts', 'ip_repo', 'hdl', 'verilog')
+IPV  = os.path.join(ROOT, 'artifacts', 'mlp', 'ip_repo', 'hdl', 'verilog')
 
 COINFLIP_BAND = 0.05    # excuse winner flips on games the model scores near 0.5
 WIN_MAX_TOL   = 26      # counts (~0.10 prob) — fixed<18,6> C-sim envelope
@@ -84,17 +84,17 @@ def test_feature_count_matches_features_json():
     assert len(meta['features']) == 21
 
 
-# ── SYNTHESIS SIGN-OFF (from artifacts/synthesis_report.json) ───────────────
+# ── SYNTHESIS SIGN-OFF (from artifacts/mlp/synthesis_report.json) ───────────────
 
 def test_synthesis_resources_within_budget():
-    rep = json.load(open(os.path.join(ROOT, 'artifacts', 'synthesis_report.json')))
+    rep = json.load(open(os.path.join(ROOT, 'artifacts', 'mlp', 'synthesis_report.json')))
     for name, r in rep['resources'].items():
         assert r['ok'], f"{name} over budget: {r['used']}/{r.get('budget', r['total'])}"
     assert rep['resources']['LUT']['used'] <= 20800
 
 
 def test_timing_closes_at_100mhz():
-    rep = json.load(open(os.path.join(ROOT, 'artifacts', 'synthesis_report.json')))
+    rep = json.load(open(os.path.join(ROOT, 'artifacts', 'mlp', 'synthesis_report.json')))
     assert rep['timing']['timing_ok'] and rep['timing']['WNS_ns'] >= 0.0
 
 

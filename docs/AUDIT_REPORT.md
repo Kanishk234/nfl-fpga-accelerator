@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-11
 **Scope:** Phases 1–7, all HDL, the synthesized IP Verilog actually in the bitstream
-(`artifacts/ip_repo/hdl/verilog/`), the cocotb suite, deployment code, and all pytest suites.
+(`artifacts/mlp/ip_repo/hdl/verilog/`), the cocotb suite, deployment code, and all pytest suites.
 **Status at time of audit:** `top.v` is a loopback stub (working tree), full design at `HEAD`
 (`a842c7e`). Board debugging in progress — LD0 never lights on inference attempts.
 
@@ -28,7 +28,7 @@ history exactly.
 
 ## 1. BLOCKING — The MLP IP cannot complete an inference in hardware
 
-### Evidence (from `artifacts/ip_repo/hdl/verilog/`, the exact source Vivado synthesized)
+### Evidence (from `artifacts/mlp/ip_repo/hdl/verilog/`, the exact source Vivado synthesized)
 
 **a) The top-level FSM is strictly sequential, not dataflow.**
 `myproject.v:67` declares an 18-state one-hot FSM. Each layer sub-module is started in its own
@@ -102,7 +102,7 @@ the RTL is broken regardless of what any other test says. Make "cosim passes" a 
 criterion alongside the resource budget.
 
 Then:
-- Re-export the IP zip, re-extract to `artifacts/ip_repo/`, re-run Phase 5 synthesis.
+- Re-export the IP zip, re-extract to `artifacts/mlp/ip_repo/`, re-run Phase 5 synthesis.
 - Re-run Phase 6 `test_mlp_verilog` **with the FIFO substitutions removed from the Makefile**.
   If the regenerated RTL still needs replay stubs to pass, it is still broken. The sim-only
   stubs should be deleted once the real RTL passes without them.
@@ -166,7 +166,7 @@ With the current IP it never will.
 The reported 9,588 LUT (46%) and WNS +0.111 ns describe a netlist in which Vivado resolved the
 `features_q0` multi-driver conflict by keeping the GND driver — constant-zero MLP input — and
 swept large cones of downstream logic. PHASE5_COMPLETE's "Final Results" table,
-`artifacts/synthesis_report.json`, and the green `tests/test_phase5.py` results all inherit this
+`artifacts/mlp/synthesis_report.json`, and the green `tests/test_phase5.py` results all inherit this
 invalid measurement. The HLS estimate for the MLP alone is 16,234 LUT; UART + controller add more.
 **The fixed design may exceed 20,800 LUT or fail timing.**
 
@@ -271,7 +271,7 @@ this is rare, but it's free diagnosability.)
 Listed as a deliverable in PHASE6_COMPLETE.md, required by
 `tests/test_phase6.py::test_actual_port_widths_file_exists` (`:109-112`) — **that test fails
 today**, so the "28/28" and "105 passed" claims are not currently reproducible. Regenerate it
-from `artifacts/ip_repo/hdl/verilog/myproject.v` (audit-verified widths: `features_q0` 18-bit,
+from `artifacts/mlp/ip_repo/hdl/verilog/myproject.v` (audit-verified widths: `features_q0` 18-bit,
 `layer9_out` 18-bit, `layer10_out` 32-bit, `features_address0` 5-bit). Commit it this time.
 
 ### 6.2 Golden expected outputs ignore input quantization
@@ -464,7 +464,7 @@ tolerances per-game.
 - Make `cosim_design` and "test_mlp_verilog with zero FIFO substitutions" permanent CI steps for
   any future Phase 4 re-run.
 - Add a pytest that asserts `utilization_report.txt` is newer than every file in
-  `mlp/phase5_fpga/hdl/` + `artifacts/ip_repo/` — stale-report bugs (§3) become impossible.
+  `mlp/phase5_fpga/hdl/` + `artifacts/mlp/ip_repo/` — stale-report bugs (§3) become impossible.
 - Add the multi-driven-net log grep to `run_synth.tcl` (§3).
 
 ---

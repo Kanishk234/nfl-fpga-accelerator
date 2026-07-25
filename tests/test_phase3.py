@@ -41,7 +41,7 @@ def q_model(features):
 
 @pytest.fixture(scope='module')
 def fp32_model():
-    return keras.models.load_model('artifacts/model_best.keras')
+    return keras.models.load_model('artifacts/mlp/model_best.keras')
 
 
 @pytest.fixture(scope='module')
@@ -52,7 +52,7 @@ def quantized_model_saved(features):
     registered as a native Keras class). Workaround: build a fresh model with
     the same architecture and restore only the weights.
     """
-    path = 'artifacts/model_quantized.keras'
+    path = 'artifacts/mlp/model_quantized.keras'
     if not os.path.exists(path):
         pytest.skip("model_quantized.keras not yet generated — run quantize.py first")
     model = build_quantized_model(n_features=len(features))
@@ -174,17 +174,17 @@ class TestQuantizedModelAccuracy:
 
 class TestArtifacts:
     def test_quantized_model_saved(self):
-        assert os.path.exists('artifacts/model_quantized.keras'), \
-            "artifacts/model_quantized.keras not found — run quantize.py first"
+        assert os.path.exists('artifacts/mlp/model_quantized.keras'), \
+            "artifacts/mlp/model_quantized.keras not found — run quantize.py first"
 
     def test_quantization_report_saved(self):
-        assert os.path.exists('artifacts/quantization_report.json'), \
-            "artifacts/quantization_report.json not found — run quantize.py first"
+        assert os.path.exists('artifacts/mlp/quantization_report.json'), \
+            "artifacts/mlp/quantization_report.json not found — run quantize.py first"
 
     def test_quantization_report_ready_for_phase4(self):
-        if not os.path.exists('artifacts/quantization_report.json'):
+        if not os.path.exists('artifacts/mlp/quantization_report.json'):
             pytest.skip("quantization_report.json not yet generated")
-        with open('artifacts/quantization_report.json') as f:
+        with open('artifacts/mlp/quantization_report.json') as f:
             report = json.load(f)
         assert report['ready_for_phase4'], \
             f"ready_for_phase4 is False — q_win_acc={report['q_win_accuracy']:.3f}, " \

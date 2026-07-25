@@ -143,8 +143,8 @@ decision validated across multiple seeds because single-run deltas are noise.
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python phase1_data/pipeline.py               # nflreadpy → data/processed/games.parquet
-python mlp/phase2_model/train.py             # → artifacts/model_best.keras     (committed)
-python mlp/phase3_quantization/quantize.py   # → artifacts/model_quantized.keras
+python mlp/phase2_model/train.py             # → artifacts/mlp/model_best.keras     (committed)
+python mlp/phase3_quantization/quantize.py   # → artifacts/mlp/model_quantized.keras
 python gbdt/phase2_train/train_gbdt.py       # → artifacts/gbdt/*.json          (committed)
 pytest tests/ -v
 ```

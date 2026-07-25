@@ -113,9 +113,9 @@ Output encoding:
 
 ### myproject (hls4ml IP)
 
-Imported from `artifacts/xilinx_com_hls_myproject_1_0.zip`. Added to Vivado as direct
+Imported from `artifacts/mlp/xilinx_com_hls_myproject_1_0.zip`. Added to Vivado as direct
 Verilog source files (not via IP catalog) to avoid output-product-generation requirement.
-Source files are in `artifacts/ip_repo/hdl/verilog/`.
+Source files are in `artifacts/mlp/ip_repo/hdl/verilog/`.
 
 ---
 
@@ -160,10 +160,10 @@ Also: `exec unzip` in Tcl doesn't work on Windows (no `unzip` command).
 
 **Fix:** Pre-extracted the IP zip in WSL:
 ```bash
-unzip artifacts/xilinx_com_hls_myproject_1_0.zip -d artifacts/ip_repo
+unzip artifacts/mlp/xilinx_com_hls_myproject_1_0.zip -d artifacts/mlp/ip_repo
 ```
 Then replaced the IP catalog approach with direct `add_files` on all `.v` and `.dat` files
-from `artifacts/ip_repo/hdl/verilog/`. Vivado treats them as ordinary RTL sources —
+from `artifacts/mlp/ip_repo/hdl/verilog/`. Vivado treats them as ordinary RTL sources —
 no output-product step needed.
 
 ---
@@ -194,7 +194,7 @@ values but the report uses `14 (14%)` format. As a result the JSON never receive
 **Fix:** Replaced the parser to look for the line starting with `|+ myproject`, split by
 `|`, extract all fields matching `^\d+` (capturing the integer before the percentage),
 and take the last 4 as BRAM/DSP/FF/LUT. Updated `check_timing` to use the Vivado
-post-route WNS from `artifacts/synthesis_report.json` (authoritative) when available,
+post-route WNS from `artifacts/mlp/synthesis_report.json` (authoritative) when available,
 falling back to HLS pre-route slack otherwise.
 
 ---
@@ -262,7 +262,7 @@ Phases 1–5 all green
 | `constraints/basys3.xdc` | Pin assignments: clk=W5, rst=U18, RX=B18, TX=A18 |
 | `scripts/create_project.tcl` | Creates Vivado project from WSL paths; adds IP Verilog directly |
 | `scripts/run_synth.tcl` | Runs synthesis → implementation → bitstream; writes reports |
-| `scripts/parse_reports.py` | Parses Vivado reports → `artifacts/synthesis_report.json` |
+| `scripts/parse_reports.py` | Parses Vivado reports → `artifacts/mlp/synthesis_report.json` |
 
 ---
 
@@ -328,8 +328,8 @@ the real numbers come from re-running synthesis on the design below.
   spread `0x03`, no deadlock/timeout — the AXIS + ap_ctrl_hs handshake works end-to-end.
 
 ### IP install + synth guards (done)
-- New Phase 4 io_stream IP extracted over `artifacts/ip_repo/` (replaces the deadlocking
-  io_serial IP); `artifacts/xilinx_com_hls_myproject_1_0.zip` refreshed.
+- New Phase 4 io_stream IP extracted over `artifacts/mlp/ip_repo/` (replaces the deadlocking
+  io_serial IP); `artifacts/mlp/xilinx_com_hls_myproject_1_0.zip` refreshed.
 - `create_project.tcl`: aborts if `ip_repo` lacks `features_TDATA` (won't synth the old IP).
 - `run_synth.tcl`: aborts on multi-driven nets in the synth log (§3).
 
@@ -358,7 +358,7 @@ synth + impl + bitstream, **0 errors / 0 critical warnings**, DRC clean, `top.bi
 - Slice occupancy 97.4% is the placer spreading logic thin (only 86% LUTs / 72% FFs used),
   NOT 97% of capacity — routing util ~17%, congestion 1×1, so ample routing/timing margin.
   Only relevant if a lot more logic were added later; the design is feature-frozen.
-- `parse_reports.py` → `artifacts/synthesis_report.json` = PASS. bitstream:
+- `parse_reports.py` → `artifacts/mlp/synthesis_report.json` = PASS. bitstream:
   `C:/nfl_fpga_build/nfl_fpga_accelerator.runs/impl_1/top.bit`.
 
 ### Still pending

@@ -69,8 +69,8 @@ Only **physical board bring-up (Phase 7)** remains; it needs the board.
   §2; LD2 is the direct deadlock probe).
 - **`myproject_stub.v`** replaced with an `io_stream` behavioral model (iverilog elaboration/smoke
   only; not in the Vivado project).
-- **Re-extracted the new IP** into `artifacts/ip_repo/` (replacing the deadlocking io_serial IP),
-  refreshed `artifacts/xilinx_com_hls_myproject_1_0.zip`.
+- **Re-extracted the new IP** into `artifacts/mlp/ip_repo/` (replacing the deadlocking io_serial IP),
+  refreshed `artifacts/mlp/xilinx_com_hls_myproject_1_0.zip`.
 - Added synth **guards** (§3): `create_project.tcl` aborts if `ip_repo` lacks `features_TDATA`
   (won't synth the old IP); `run_synth.tcl` aborts on multi-driven nets.
 - **Result (Vivado 2025.2, xc7a35t):** synth + impl + bitstream, 0 errors / 0 critical warnings.

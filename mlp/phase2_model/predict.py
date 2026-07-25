@@ -26,7 +26,7 @@ def run_sample_predictions():
     """Load all artifacts and predict on a handful of 2024 games."""
 
     # Load artifacts
-    model  = keras.models.load_model('artifacts/model_best.keras')
+    model  = keras.models.load_model('artifacts/mlp/model_best.keras')
     with open('artifacts/scaler.pkl', 'rb') as f:
         scaler = pickle.load(f)
     with open('artifacts/features.json') as f:

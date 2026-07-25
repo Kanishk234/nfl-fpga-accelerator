@@ -29,7 +29,7 @@ harness for validating feature changes against run-to-run noise.
 
 ```
 artifacts/scaler.pkl        — MinMaxScaler fitted on training data only (seasons ≤2020)
-artifacts/model_best.keras  — Best checkpoint saved during training
+artifacts/mlp/model_best.keras  — Best checkpoint saved during training
 notebooks/training_curves.png — Loss and accuracy curves over epochs
 ```
 
@@ -101,7 +101,7 @@ The model was compiled with:
 Three callbacks ran during training:
 - **EarlyStopping** (patience=15): stopped training once val loss stopped
   improving for 15 consecutive epochs, then rewound to the best weights
-- **ModelCheckpoint**: saved `artifacts/model_best.keras` whenever val loss
+- **ModelCheckpoint**: saved `artifacts/mlp/model_best.keras` whenever val loss
   improved — so the saved file always contains the best weights, not the
   final epoch's weights
 - **ReduceLROnPlateau** (patience=7): halved the learning rate when val loss
@@ -197,7 +197,7 @@ pytest tests/test_phase1.py tests/test_phase2.py -v
 | `test_win_probs_in_unit_interval` | sigmoid output always in [0, 1] |
 | `test_params_within_basys3_budget` | total params < 50,000 (actual: 13,218) |
 | `test_shuffled_features_produce_different_predictions` | feature order actually matters |
-| `test_model_exists` | artifacts/model_best.keras saved to disk |
+| `test_model_exists` | artifacts/mlp/model_best.keras saved to disk |
 | `test_scaler_exists` | artifacts/scaler.pkl saved to disk |
 | `test_features_json_exists` | artifacts/features.json unchanged from Phase 1 |
 | `test_full_roundtrip_output_ranges` | raw features → scale → predict → win in [0,1], spread in [-60,60] |
@@ -223,6 +223,6 @@ pytest tests/test_phase1.py tests/test_phase2.py -v
 |---|---|
 | `artifacts/features.json` | Locked from Phase 1 — 21 features, permanent order |
 | `artifacts/scaler.pkl` | Locked — never refit |
-| `artifacts/model_best.keras` | Source of truth for Phases 3–7 |
+| `artifacts/mlp/model_best.keras` | Source of truth for Phases 3–7 |
 
 All three of these files are the inputs to Phase 3 (QKeras quantization).

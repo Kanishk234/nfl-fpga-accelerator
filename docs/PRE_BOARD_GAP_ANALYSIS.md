@@ -221,7 +221,7 @@ New sim infra: `myproject_stub_stall.v`, `tb_timeout.v`, `tb_top_timeout.v`, `tb
 
 ### Post-rebuild synthesis sign-off (G6 included)
 LUT 17,888 / 20,800 (86.0%), FF 29,824 (+18 vs pre-G6 = the watchdog counter), BRAM 7, DSP 18,
-**WNS +0.126 ns** (timing closes at 100 MHz), DRC clean. `artifacts/synthesis_report.json` refreshed;
+**WNS +0.126 ns** (timing closes at 100 MHz), DRC clean. `artifacts/mlp/synthesis_report.json` refreshed;
 `tests/test_phase6.py` validates it.
 
 ### Scope explicitly NOT covered (pre-board)

@@ -79,9 +79,9 @@ def save_quantization_report(metrics, bit_config):
                                  and metrics['acc_drop'] <= 0.02),
     }
 
-    with open('artifacts/quantization_report.json', 'w') as f:
+    with open('artifacts/mlp/quantization_report.json', 'w') as f:
         json.dump(report, f, indent=2)
 
-    print(f"\nSaved: artifacts/quantization_report.json")
+    print(f"\nSaved: artifacts/mlp/quantization_report.json")
     print(f"Ready for Phase 4: {report['ready_for_phase4']}")
     return report

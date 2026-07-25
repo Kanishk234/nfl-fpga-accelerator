@@ -32,14 +32,14 @@ project in Windows Vitis HLS GUI for RTL synthesis and IP export.
 ## Problem 1: hls4ml 1.3.0 cannot convert a QKeras model under Keras 3
 
 **What we tried first (ideal approach):**
-Pass `artifacts/model_quantized.keras` directly to `hls4ml.converters.convert_from_keras_model()`.
+Pass `artifacts/mlp/model_quantized.keras` directly to `hls4ml.converters.convert_from_keras_model()`.
 hls4ml would read the QKeras quantizer configs and auto-generate the correct ap_fixed types.
 
 **Error A — deserialization failure:**
 ```
 TypeError: Could not locate class 'quantized_bits'
 ```
-`keras.models.load_model('artifacts/model_quantized.keras')` fails because Keras 3's custom
+`keras.models.load_model('artifacts/mlp/model_quantized.keras')` fails because Keras 3's custom
 objects registry does not find the QKeras quantizers at deserialization time, even after
 explicitly registering them with `keras.utils.get_custom_objects()`.
 
@@ -295,7 +295,7 @@ At 8-bit relu (0.0625 resolution), 0.046 mean / 0.085 max is near-optimal.
   `ap_fixed<16,7>` bias, `ap_fixed<8,4>` relu result
 - `run_csim()`: compares HLS output against float32 inference model (not QKeras)
 - Backend: `'Vitis'`; part: `xc7a35tcpg236-1`; clock: 10 ns; io_type: `io_parallel`
-- Saves `artifacts/hls_config.json` and `artifacts/hls_resource_report.json`
+- Saves `artifacts/mlp/hls_config.json` and `artifacts/mlp/hls_resource_report.json`
 
 ### `mlp/phase4_hls/resource_report.py`
 - Mirrors convert.py's weight loading and precision config exactly
@@ -310,8 +310,8 @@ At 8-bit relu (0.0625 resolution), 0.046 mean / 0.085 max is near-optimal.
 - Synthesis tests: use `pytest.skip()` until Windows synthesis is run
 
 ### Artifacts
-- `artifacts/hls_config.json` — reuse_factor, backend, part, clock, bit_widths
-- `artifacts/hls_resource_report.json` — csim_mean_delta, csim_max_delta, csim_n_samples
+- `artifacts/mlp/hls_config.json` — reuse_factor, backend, part, clock, bit_widths
+- `artifacts/mlp/hls_resource_report.json` — csim_mean_delta, csim_max_delta, csim_n_samples
 - `mlp/phase4_hls/hls_project/` — generated Vitis HLS C++ project (firmware/ directory populated)
 
 ---
@@ -390,7 +390,7 @@ Files to commit:
 - `mlp/phase4_hls/synth_only.tcl`
 - `mlp/phase4_hls/run_synthesis.bat`
 - `tests/test_phase4.py`
-- `artifacts/hls_config.json`
-- `artifacts/hls_resource_report.json`
+- `artifacts/mlp/hls_config.json`
+- `artifacts/mlp/hls_resource_report.json`
 - `mlp/phase4_hls/hls_project/firmware/` (including patched `nnet_dense_resource.h`)
 - `mlp/phase4_hls/PHASE4_PROGRESS.md`

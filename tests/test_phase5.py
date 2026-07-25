@@ -15,7 +15,9 @@ REPO = Path(__file__).resolve().parents[1]
 HDL_DIR    = REPO / "mlp/phase5_fpga" / "hdl"
 CONST_DIR  = REPO / "mlp/phase5_fpga" / "constraints"
 SCRIPT_DIR = REPO / "mlp/phase5_fpga" / "scripts"
-ARTIFACT   = REPO / "artifacts"
+# artifacts/ root holds only the shared inputs (features.json, scaler.pkl);
+# per-model outputs live under artifacts/mlp/ and artifacts/gbdt/.
+ARTIFACT   = REPO / "artifacts" / "mlp"
 
 
 # ---------------------------------------------------------------------------

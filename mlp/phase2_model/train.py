@@ -144,7 +144,7 @@ def train_model(model, X_train, X_val, y_train, y_val, sample_weight=None):
             verbose=1,
         ),
         keras.callbacks.ModelCheckpoint(
-            filepath='artifacts/model_best.keras',
+            filepath='artifacts/mlp/model_best.keras',
             monitor='val_loss',
             save_best_only=True,
             verbose=1,

@@ -2,7 +2,7 @@
 
 ## What Phase 4 Does
 
-Converts the trained Keras model (`artifacts/model_best.keras`) into synthesizable
+Converts the trained Keras model (`artifacts/mlp/model_best.keras`) into synthesizable
 HLS C++ using hls4ml 1.3.0, then runs Vitis HLS 2025.2 to produce:
 - Resource utilization estimates (LUT, FF, BRAM, DSP)
 - RTL (Verilog/VHDL) for the neural network
@@ -408,5 +408,5 @@ interface, the `layer9_out[11:4]` win slice, and the `layer10_out[23:16]` spread
 are OBSOLETE. The byte→fixed trick still applies but now **per 32-bit lane**:
 `lane[17:0] = {6'b0, byte, 4'b0}`. `mlp_controller.v` must be rewritten for this AXIS
 handshake (read the real `myproject.v` ports — do not assume). Re-extract the new
-`impl/ip/` export over `artifacts/ip_repo/` before Phase 5 synthesis; the old ip_repo
+`impl/ip/` export over `artifacts/mlp/ip_repo/` before Phase 5 synthesis; the old ip_repo
 still contains the deadlocking io_serial IP.

@@ -22,7 +22,7 @@ import pytest
 def artifacts():
     """Load all three artifacts once per module."""
     scaler_path = 'artifacts/scaler.pkl'
-    model_path  = 'artifacts/model_best.keras'
+    model_path  = 'artifacts/mlp/model_best.keras'
     feat_path   = 'artifacts/features.json'
 
     for path in [scaler_path, model_path, feat_path]:
@@ -198,8 +198,8 @@ class TestFeatureOrderSensitivity:
 
 class TestArtifactsExistAfterTraining:
     def test_model_exists(self):
-        assert os.path.exists('artifacts/model_best.keras'), \
-            "artifacts/model_best.keras missing — run train.py first"
+        assert os.path.exists('artifacts/mlp/model_best.keras'), \
+            "artifacts/mlp/model_best.keras missing — run train.py first"
 
     def test_scaler_exists(self):
         assert os.path.exists('artifacts/scaler.pkl'), \

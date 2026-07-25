@@ -27,8 +27,8 @@ QKeras model, verify it is hls4ml-compatible, and run readiness checks.
 ## What It Produced
 
 ```
-artifacts/model_quantized.keras     — QKeras model with fine-tuned fixed-point weights
-artifacts/quantization_report.json  — full metrics, bit config, hls4ml readiness fields
+artifacts/mlp/model_quantized.keras     — QKeras model with fine-tuned fixed-point weights
+artifacts/mlp/quantization_report.json  — full metrics, bit config, hls4ml readiness fields
 ```
 
 ---
@@ -97,7 +97,7 @@ layer precision separately in Phase 4.
 
 ### 2. Weight Transfer
 
-Weights from `artifacts/model_best.keras` were copied directly into the QKeras
+Weights from `artifacts/mlp/model_best.keras` were copied directly into the QKeras
 model layer by layer. Only layers with weights were transferred — `QActivation`
 layers have no weights, and Dropout doesn't exist in the QKeras model.
 
@@ -137,7 +137,7 @@ Fine-tuning config:
 - Learning rate: 0.0001 (10× lower than Phase 2 — adjusting existing weights, not learning from scratch)
 - Batch size: 32
 - EarlyStopping: patience=10 on `val_win_accuracy`, mode='max'
-- ModelCheckpoint: saves best `val_win_accuracy` to `artifacts/model_quantized.keras`
+- ModelCheckpoint: saves best `val_win_accuracy` to `artifacts/mlp/model_quantized.keras`
 
 EarlyStopping triggered at epoch 11, restoring weights from epoch 1 (best
 `val_win_accuracy = 0.6464`).
@@ -222,7 +222,7 @@ functions (you'll see a UserWarning about this — it's harmless).
 
 ### 2. QKeras Model Load Broken in Keras 3
 
-**Symptom:** `keras.models.load_model('artifacts/model_quantized.keras')` raises
+**Symptom:** `keras.models.load_model('artifacts/mlp/model_quantized.keras')` raises
 `TypeError: Could not locate class 'QDense'`.
 
 **What doesn't work:** Passing `custom_objects` — even with all QKeras classes
@@ -235,7 +235,7 @@ Instead, build a fresh model and load only the weights:
 ```python
 model = build_quantized_model(n_features=len(features))
 compile_quantized_model(model)
-model.load_weights('artifacts/model_quantized.keras')
+model.load_weights('artifacts/mlp/model_quantized.keras')
 ```
 
 This works because the architecture is always known (defined in `qkeras_model.py`),
@@ -281,8 +281,8 @@ Phase 3 tests:
 | `test_accuracy_drop_within_tolerance` | fp_acc - q_acc <= 2% |
 | `test_quantized_accuracy_above_floor` | q_acc >= 63% |
 | `test_spread_mae_degradation` | q_mae - fp_mae <= 1.0 pt |
-| `test_quantized_model_saved` | artifacts/model_quantized.keras exists |
-| `test_quantization_report_saved` | artifacts/quantization_report.json exists |
+| `test_quantized_model_saved` | artifacts/mlp/model_quantized.keras exists |
+| `test_quantization_report_saved` | artifacts/mlp/quantization_report.json exists |
 | `test_quantization_report_ready_for_phase4` | report['ready_for_phase4'] == True |
 | `test_deterministic_inference` | same input → identical output both times (no random ops) |
 | `test_numerical_agreement_per_game` | per-game win prob delta < 0.10 for 20 val games |
@@ -327,8 +327,8 @@ Phase 3 tests:
 
 | File | Description |
 |---|---|
-| `artifacts/model_quantized.keras` | Fine-tuned QKeras model weights — input to Phase 4 hls4ml conversion |
-| `artifacts/quantization_report.json` | Bit config, accuracy metrics, hls4ml readiness, recommended reuse_factor |
+| `artifacts/mlp/model_quantized.keras` | Fine-tuned QKeras model weights — input to Phase 4 hls4ml conversion |
+| `artifacts/mlp/quantization_report.json` | Bit config, accuracy metrics, hls4ml readiness, recommended reuse_factor |
 
 The `model_best.keras` (Phase 2) remains the source of truth for weight transfer.
 `model_quantized.keras` is always regenerated from `model_best.keras` by running

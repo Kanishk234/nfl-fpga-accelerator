@@ -60,7 +60,7 @@ def build_inference_model(n_features: int) -> keras.Model:
 
 
 def load_inference_model(features_path='artifacts/features.json',
-                         weights_source='artifacts/model_quantized.keras'):
+                         weights_source='artifacts/mlp/model_quantized.keras'):
     """
     Build inference model with QAT-quantized weights.
 
@@ -310,9 +310,9 @@ if __name__ == '__main__':
         'model_source':    'model_quantized.keras (QAT weights snapped to fixed-point grid)',
         'bit_widths':      {'kernel': '<8,1>', 'bias': '<16,7>', 'activation': '<8,4>'},
     }
-    with open('artifacts/hls_config.json', 'w') as f:
+    with open('artifacts/mlp/hls_config.json', 'w') as f:
         json.dump(hls_config_record, f, indent=2)
-    print("\nSaved: artifacts/hls_config.json")
+    print("\nSaved: artifacts/mlp/hls_config.json")
 
     # 5. C simulation — GCC-based, no Vitis HLS needed
     mean_delta, max_delta = run_csim(hls_model, model)
@@ -323,9 +323,9 @@ if __name__ == '__main__':
         'csim_max_delta':  max_delta,
         'csim_n_samples':  100,
     }
-    with open('artifacts/hls_resource_report.json', 'w') as f:
+    with open('artifacts/mlp/hls_resource_report.json', 'w') as f:
         json.dump(csim_record, f, indent=2)
-    print("Saved: artifacts/hls_resource_report.json (csim results only)")
+    print("Saved: artifacts/mlp/hls_resource_report.json (csim results only)")
 
     print("\n=== Conversion complete ===")
     print(f"  C sim mean delta: {mean_delta:.4f}")

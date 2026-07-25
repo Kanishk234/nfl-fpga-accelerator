@@ -47,7 +47,7 @@ def load_hls_model():
 
     with open('artifacts/features.json') as f:
         meta = json.load(f)
-    with open('artifacts/hls_config.json') as f:
+    with open('artifacts/mlp/hls_config.json') as f:
         cfg = json.load(f)
 
     n = len(meta['features'])
@@ -55,7 +55,7 @@ def load_hls_model():
     # Use QAT weights snapped to fixed-point grid — matches convert.py
     q_model = build_quantized_model(n_features=n)
     compile_quantized_model(q_model)
-    q_model.load_weights('artifacts/model_quantized.keras')
+    q_model.load_weights('artifacts/mlp/model_quantized.keras')
 
     kernel_q = quantized_bits(bits=8,  integer=0, symmetric=1)
     bias_q   = quantized_bits(bits=16, integer=6)
@@ -207,7 +207,7 @@ def check_timing(report_path):
 
     # Vivado post-route timing takes precedence if synthesis_report.json exists
     vivado_wns = None
-    synth_report = 'artifacts/synthesis_report.json'
+    synth_report = 'artifacts/mlp/synthesis_report.json'
     if os.path.isfile(synth_report):
         with open(synth_report) as f:
             sr = json.load(f)
@@ -254,8 +254,8 @@ if __name__ == '__main__':
 
         # Load existing csim results if present
         existing = {}
-        if os.path.isfile('artifacts/hls_resource_report.json'):
-            with open('artifacts/hls_resource_report.json') as f:
+        if os.path.isfile('artifacts/mlp/hls_resource_report.json'):
+            with open('artifacts/mlp/hls_resource_report.json') as f:
                 existing = json.load(f)
 
         report = {
@@ -266,9 +266,9 @@ if __name__ == '__main__':
             'reuse_factor_used':  147,
             'report_path':        report_path,
         }
-        with open('artifacts/hls_resource_report.json', 'w') as f:
+        with open('artifacts/mlp/hls_resource_report.json', 'w') as f:
             json.dump(report, f, indent=2)
-        print(f"\nSaved: artifacts/hls_resource_report.json")
+        print(f"\nSaved: artifacts/mlp/hls_resource_report.json")
 
         if all_fit and timing_met:
             print("\nPhase 4 complete — ready for Phase 5.")

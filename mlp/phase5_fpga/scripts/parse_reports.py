@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parse Vivado utilization + timing reports into artifacts/synthesis_report.json."""
+"""Parse Vivado utilization + timing reports into artifacts/mlp/synthesis_report.json."""
 import json
 import re
 import sys
