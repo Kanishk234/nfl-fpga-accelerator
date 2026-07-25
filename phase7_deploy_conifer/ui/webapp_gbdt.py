@@ -1,16 +1,23 @@
 """
-NFL FPGA Predictor — local web UI.
+NFL FPGA Predictor (GBDT) — local web UI.
 
-A modern browser front-end for running inference on the Basys 3. Backend is the Python
-standard library only (http.server) + pyserial — no Flask, no extra installs. Feature
-bytes come from games_catalog.json (built once in WSL by export_catalog.py), so this runs
-natively on Windows where the board's COM port lives.
+The GBDT twin of phase7_deploy/ui/webapp.py. Backend is the Python standard
+library only (http.server) + pyserial, so it runs natively on Windows where the
+board's COM port lives; feature bytes come from games_catalog_gbdt.json (built
+once in WSL by export_catalog_gbdt.py).
 
-    python phase7_deploy/ui/webapp.py            # opens http://127.0.0.1:8713
-    python phase7_deploy/ui/webapp.py --port 9000 --no-browser
+    python phase7_deploy_conifer/ui/webapp_gbdt.py            # http://127.0.0.1:8714
+    python phase7_deploy_conifer/ui/webapp_gbdt.py --port 9000 --no-browser
 
-The board is driven through the exact same FPGAClient the CLI/desktop tools use: the win%
-and spread are the 4 bytes the FPGA returns — nothing is computed on the laptop.
+It deliberately serves the SAME phase7_deploy/ui/index.html as the MLP app
+rather than forking 280 lines of near-identical HTML. That page is model-driven:
+everything build-specific (header badge, pipeline labels, spread precision, the
+raw-word denominator) arrives in the `model` block of /api/bootstrap. See
+PHASE7_CONIFER_COMPLETE.md "One page, two bitstreams".
+
+Default HTTP port is 8714, one above the MLP's 8713, so both UIs can run at once
+— though only one may hold the COM port at a time, and only one bitstream is
+loaded on the board.
 """
 import argparse
 import json
@@ -21,31 +28,30 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import serial.tools.list_ports
-from phase7_deploy.inference.fpga_client import FPGAClient
+
 from phase7_deploy.inference.game_catalog import GameCatalog
+from phase7_deploy_conifer.inference.fpga_client_gbdt import GBDTClient
 
-HERE     = Path(__file__).parent
-INDEX    = HERE / 'index.html'
-CATALOG  = None          # GameCatalog, loaded at startup
+REPO = Path(__file__).resolve().parents[2]
+# Shared with the MLP app — single source of truth for the page.
+INDEX = REPO / 'phase7_deploy' / 'ui' / 'index.html'
+CATALOG_PATH = REPO / 'phase7_deploy_conifer' / 'games_catalog_gbdt.json'
+CATALOG = None
 
-# Describes THIS bitstream to the front-end. index.html is model-driven so the
-# GBDT server (phase7_deploy_conifer/ui/webapp_gbdt.py) can serve the same page
-# with a different block — the two builds have different UART protocols and must
-# never be confused for each other.
+# Tells index.html which bitstream it is talking to.
 MODEL = {
-    'name': 'MLP',
-    'sub': '4-layer dense · hls4ml',
-    'steps': ['Encode 21B', 'TX →', 'FPGA MLP', '← RX 4B'],
-    'raw_denom': 256,
-    'spread_decimals': 0,
+    'name': 'GBDT',
+    'sub': '2-stage XGBoost · conifer',
+    'steps': ['Encode 63B', 'TX →', 'FPGA GBDT ×2', '← RX 8B'],
+    'raw_denom': 4096,        # ap_fixed<24,12>
+    'spread_decimals': 2,     # full-width result, not a rounded byte
 }
 
-# One persistent serial connection, guarded so overlapping requests serialize.
 _client = None
-_lock   = threading.Lock()
+_lock = threading.Lock()
 
 
 def _get_client(port):
@@ -54,7 +60,7 @@ def _get_client(port):
         _client.disconnect()
         _client = None
     if _client is None or not _client.is_connected():
-        _client = FPGAClient(port)
+        _client = GBDTClient(port)
         _client.connect()
     return _client
 
@@ -65,15 +71,13 @@ def list_ports():
 
 
 def bootstrap():
-    # Everything the front-end needs to build its dropdowns, minus the feature bytes
-    # (those stay server-side and are looked up by gid at inference time).
     games = [{'gid': g['gid'], 'season': g['season'], 'week': g['week'],
               'home': g['home'], 'away': g['away'],
               'actual_winner': g.get('actual_winner'),
               'actual_spread': g.get('actual_spread')}
              for g in CATALOG.games]
-    return {'generated': CATALOG.generated, 'ports': list_ports(), 'games': games,
-            'model': MODEL}
+    return {'generated': CATALOG.generated, 'ports': list_ports(),
+            'games': games, 'model': MODEL}
 
 
 def infer(port, gid):
@@ -135,27 +139,30 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self._json({'error': 'not found'}, 404)
 
-    def log_message(self, *a):        # keep the console quiet
+    def log_message(self, *a):
         pass
 
 
 def main():
     global CATALOG
     ap = argparse.ArgumentParser()
-    ap.add_argument('--port', type=int, default=8713, help='HTTP port')
+    ap.add_argument('--port', type=int, default=8714, help='HTTP port')
     ap.add_argument('--no-browser', action='store_true')
     args = ap.parse_args()
 
     try:
-        CATALOG = GameCatalog()
+        CATALOG = GameCatalog(CATALOG_PATH)
     except FileNotFoundError:
-        print("games_catalog.json not found — build it once in WSL:")
-        print("  source venv/bin/activate && python phase7_deploy/export_catalog.py")
+        print(f"{CATALOG_PATH.name} not found — build it once in WSL:")
+        print("  source venv/bin/activate && "
+              "python phase7_deploy_conifer/export_catalog_gbdt.py")
         sys.exit(1)
 
     url = f"http://127.0.0.1:{args.port}"
-    print(f"NFL FPGA Predictor — {len(CATALOG.games)} games loaded")
+    print(f"NFL FPGA Predictor (GBDT) — {len(CATALOG.games)} games loaded")
     print(f"Serving {url}   (Ctrl+C to stop)")
+    print("Board must be running top_gbdt.bit — the MLP bitstream speaks a "
+          "different protocol and will not answer these packets.")
     if not args.no_browser:
         threading.Timer(0.5, lambda: webbrowser.open(url)).start()
     try:
