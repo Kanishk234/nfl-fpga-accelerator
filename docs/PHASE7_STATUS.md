@@ -1,5 +1,22 @@
 # Phase 7 — Board Deployment Status
 
+> [!WARNING]
+> **SUPERSEDED — historical snapshot, do not use as a reference.**
+>
+> This was written mid-debug, while `top.v` was still a temporary loopback stub and the
+> UART pin orientation (A18 vs B18) was unresolved. Everything here was overtaken by the
+> actual bring-up. It is kept only as a record of what the project looked like before the
+> board worked.
+>
+> For the real, verified state see:
+> - **[`mlp/phase7_deploy/PHASE7_COMPLETE.md`](../mlp/phase7_deploy/PHASE7_COMPLETE.md)** —
+>   MLP sign-off: 50/50 bit-exact on hardware, B18=RX resolved, 11.5 → 3.4 ms latency fix.
+> - **[`gbdt/phase7_deploy/PHASE7_CONIFER_COMPLETE.md`](../gbdt/phase7_deploy/PHASE7_CONIFER_COMPLETE.md)** —
+>   GBDT sign-off: 100/100 bit-exact with zero tolerance, median 6.9 ms.
+>
+> Note also that paths below were mechanically updated by the 2026-07-26 `mlp/`+`gbdt/`
+> reorg, so they point at current locations even though the content is obsolete.
+
 ## What's Done
 
 ### Python files (all written, all non-board tests pass)
