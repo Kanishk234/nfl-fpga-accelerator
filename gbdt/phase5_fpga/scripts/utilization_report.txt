@@ -1,14 +1,14 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2025.2 (win64) Build 6299465 Fri Nov 14 19:35:11 GMT 2025
-| Date         : Sun Jul 19 22:54:20 2026
+| Date         : Sun Jul 26 01:09:39 2026
 | Host         : LAPTOP-C8RSJ5BT running 64-bit major release  (build 9200)
-| Command      : report_utilization -file //wsl.localhost/Ubuntu/home/younix/nfl-fpga-accelerator/phase5_fpga_conifer/scripts/utilization_report.txt
+| Command      : report_utilization -file //wsl.localhost/Ubuntu/home/younix/nfl-fpga-accelerator/gbdt/phase5_fpga/scripts/utilization_report.txt
 | Design       : top_gbdt
 | Device       : xc7a35tcpg236-1
 | Speed File   : -1
 | Design State : Routed
------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 Utilization Design Information
 
