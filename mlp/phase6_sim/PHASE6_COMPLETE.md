@@ -357,5 +357,17 @@ Removed the obsolete io_serial-era verification so it can't mislead again:
 - `functional/` — the authoritative real-IP verification (XSIM); see `functional/ABOUT.md`.
 - `cocotb/` — UART leaf-module unit tests only (`uart_rx`/`uart_tx`/`uart_framing`), iverilog.
 
-(Note: `tests/test_phase6.py` pytest still references the old flow and is itself stale per
-audit §6.1 — update or retire it when convenient; it is not part of the functional sign-off.)
+### Update (2026-07-26) — the pytest suite is no longer stale
+
+This document previously warned that `tests/test_phase6.py` still referenced the old io_serial
+flow (audit §6.1). That is **no longer true**: it was rewritten for the post-audit layout and now
+checks the `functional/` suite is present, the installed IP is the io_stream build (asserts
+`features_TDATA` in `myproject.v`), the obsolete stubs stay deleted, the synthesis sign-off
+numbers hold, and — when `sim_results.csv` exists — the real-IP regression meets the same
+criteria as `functional/check_results.py`.
+
+`tests/test_phase5.py` was the one still carrying io_serial-era assertions; its `TestHDLContent`
+class was rewritten against the shipped AXI-Stream design on the same date, plus a new guard
+(`test_top_has_no_ap_memory_ports`) that fails if the deleted `features_q0`/`ap_vld` interface
+ever reappears. **`pytest tests/` is now green: 182 passed, 13 skipped** (skips are board- and
+Vivado-gated).

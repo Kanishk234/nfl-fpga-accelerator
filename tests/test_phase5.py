@@ -91,8 +91,9 @@ class TestHDLContent:
 
     def test_uart_framing_21_features(self):
         text = self._read("uart_framing.v")
-        # byte_cnt goes up to 20 (0..20 = 21 features)
-        assert "5'd20" in text or "20" in text, \
+        # byte_cnt goes up to 20 (0..20 = 21 features). The old `or "20" in text`
+        # fallback made this tautological — "20" appears in any nontrivial file.
+        assert "byte_cnt == 5'd20" in text, \
             "uart_framing.v must collect exactly 21 features (byte_cnt 0-20)"
 
     def test_uart_framing_feature_bus_width(self):
@@ -105,26 +106,39 @@ class TestHDLContent:
         assert "checksum ^ rx_data" in text or "^ rx_data" in text, \
             "uart_framing.v must compute XOR checksum"
 
-    def test_mlp_controller_ap_start_combinational(self):
-        text = self._read("mlp_controller.v")
-        assert "assign ap_start" in text, \
-            "mlp_controller.v must drive ap_start as a combinational assign"
+    # NOTE (2026-07-26): the four tests below previously asserted the ap_memory
+    # interface (`assign ap_start`, `features_q0`, an [11:4] win slice). That
+    # interface was deleted by the io_stream rewrite that fixed the in-hardware
+    # deadlock (AUDIT_REPORT.md §1), so two of them failed and two passed only by
+    # matching substrings in comments. Rewritten against the shipped AXI-Stream
+    # design — the one that is actually in the bitstream.
 
-    def test_mlp_controller_features_q0_encoding(self):
+    def test_mlp_controller_ap_start_registered_and_held(self):
         text = self._read("mlp_controller.v")
-        # encoding: {6'b0, byte, 4'b0}
-        assert "4'b0}" in text or "4'b0" in text, \
-            "mlp_controller.v must encode features_q0 as {6'b0, byte, 4'b0}"
+        assert "output reg         ap_start" in text, \
+            "ap_start must be a registered output (ap_ctrl_hs), not a combinational assign"
+        assert "ap_start          <= 1'b1;" in text, \
+            "mlp_controller.v must raise ap_start when it launches an inference"
 
-    def test_mlp_controller_win_bit_extract(self):
+    def test_mlp_controller_packs_one_672_bit_beat(self):
         text = self._read("mlp_controller.v")
-        assert "11:4" in text, \
-            "mlp_controller.v must extract win prob from layer9_out[11:4]"
+        assert "output reg [671:0] features_TDATA" in text, \
+            "features must be a 672-bit AXI-Stream word (21 lanes x 32 bits)"
+        # lane encoding: byte lands at bits [11:4] of its 32-bit lane
+        assert "features_TDATA[i*32 +: 32] <= {20'b0, feature_bus[i*8 +: 8], 4'b0}" in text, \
+            "each feature byte must be packed as {20'b0, byte, 4'b0} into its lane"
+
+    def test_mlp_controller_holds_tvalid_until_tready(self):
+        text = self._read("mlp_controller.v")
+        for sig in ["features_TVALID", "features_TREADY",
+                    "layer9_out_TREADY", "layer10_out_TREADY"]:
+            assert sig in text, f"mlp_controller.v is missing AXI-Stream signal {sig}"
 
     def test_mlp_controller_spread_bit_extract(self):
         text = self._read("mlp_controller.v")
-        assert "23:16" in text, \
-            "mlp_controller.v must extract spread from layer10_out[23:16]"
+        # spread arrives as ap_fixed<32,16>; the integer byte is bits [23:16]
+        assert "result_spread <= spread_word[23:16]" in text, \
+            "mlp_controller.v must take the spread integer byte from bits [23:16]"
 
     def test_top_instantiates_myproject(self):
         text = self._read("top.v")
@@ -132,10 +146,24 @@ class TestHDLContent:
             "top.v must instantiate the myproject hls4ml IP"
 
     def test_top_port_names(self):
+        """top.v must wire the io_stream IP's AXI-Stream ports.
+
+        Was asserting the ap_memory ports (features_address0/ce0/q0,
+        layer9_out_ap_vld) that the io_stream rewrite removed — see the note above.
+        """
         text = self._read("top.v")
-        for port in ["layer9_out_ap_vld", "layer10_out_ap_vld",
-                     "features_address0", "features_ce0", "features_q0"]:
+        for port in ["features_TDATA", "features_TVALID", "features_TREADY",
+                     "layer9_out_TDATA", "layer9_out_TVALID", "layer9_out_TREADY",
+                     "layer10_out_TDATA", "layer10_out_TVALID", "layer10_out_TREADY"]:
             assert port in text, f"top.v is missing port {port}"
+
+    def test_top_has_no_ap_memory_ports(self):
+        """Guard against a regression to the interface that deadlocked on silicon."""
+        text = self._read("top.v")
+        for dead in ["features_address0", "features_ce0", "features_q0",
+                     "layer9_out_ap_vld", "layer10_out_ap_vld"]:
+            assert dead not in text, \
+                f"top.v references the removed ap_memory port {dead} (AUDIT_REPORT.md §1)"
 
     def test_top_no_0v_suffix(self):
         text = self._read("top.v")
