@@ -287,7 +287,7 @@ At 8-bit relu (0.0625 resolution), 0.046 mean / 0.085 max is near-optimal.
 
 ## Final State
 
-### `phase4_hls/convert.py`
+### `mlp/phase4_hls/convert.py`
 - `load_inference_model()`: builds QKeras model fresh → loads QAT weights from
   `model_quantized.keras` → snaps to fixed-point grid with quantizers → transfers to plain
   Dense+ReLU model
@@ -297,7 +297,7 @@ At 8-bit relu (0.0625 resolution), 0.046 mean / 0.085 max is near-optimal.
 - Backend: `'Vitis'`; part: `xc7a35tcpg236-1`; clock: 10 ns; io_type: `io_parallel`
 - Saves `artifacts/hls_config.json` and `artifacts/hls_resource_report.json`
 
-### `phase4_hls/resource_report.py`
+### `mlp/phase4_hls/resource_report.py`
 - Mirrors convert.py's weight loading and precision config exactly
 - Option A (vitis_hls on PATH): runs synthesis via `hls_model.build()`
 - Option B (no WSL PATH): parses reports written by Windows Vitis HLS GUI
@@ -312,7 +312,7 @@ At 8-bit relu (0.0625 resolution), 0.046 mean / 0.085 max is near-optimal.
 ### Artifacts
 - `artifacts/hls_config.json` — reuse_factor, backend, part, clock, bit_widths
 - `artifacts/hls_resource_report.json` — csim_mean_delta, csim_max_delta, csim_n_samples
-- `phase4_hls/hls_project/` — generated Vitis HLS C++ project (firmware/ directory populated)
+- `mlp/phase4_hls/hls_project/` — generated Vitis HLS C++ project (firmware/ directory populated)
 
 ---
 
@@ -370,7 +370,7 @@ The BRAM pragma fix is applied. Run `run_synthesis.bat` again (15 min). It copie
 ### 2. Verify synthesis results
 After synthesis completes, in WSL:
 ```bash
-python phase4_hls/resource_report.py
+python mlp/phase4_hls/resource_report.py
 pytest tests/ -v
 ```
 The 6 synthesis tests will un-skip. Expect:
@@ -384,13 +384,13 @@ If LUT/FF still over budget after this fix, increase `reuse_factor` in `convert.
 
 ### 3. Commit
 Files to commit:
-- `phase4_hls/convert.py`
-- `phase4_hls/resource_report.py`
-- `phase4_hls/__init__.py`
-- `phase4_hls/synth_only.tcl`
-- `phase4_hls/run_synthesis.bat`
+- `mlp/phase4_hls/convert.py`
+- `mlp/phase4_hls/resource_report.py`
+- `mlp/phase4_hls/__init__.py`
+- `mlp/phase4_hls/synth_only.tcl`
+- `mlp/phase4_hls/run_synthesis.bat`
 - `tests/test_phase4.py`
 - `artifacts/hls_config.json`
 - `artifacts/hls_resource_report.json`
-- `phase4_hls/hls_project/firmware/` (including patched `nnet_dense_resource.h`)
-- `phase4_hls/PHASE4_PROGRESS.md`
+- `mlp/phase4_hls/hls_project/firmware/` (including patched `nnet_dense_resource.h`)
+- `mlp/phase4_hls/PHASE4_PROGRESS.md`

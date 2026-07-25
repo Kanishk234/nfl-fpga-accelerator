@@ -54,7 +54,7 @@ behaves identically. The deadlock occurs on the *first layer* of the *first infe
   (`myproject.v:357`) both drain the single `layer7_out_fifo_U`. A FIFO read is destructive;
   the second head reads an empty stream.
 
-**d) Phase 6 masked all of this.** The cocotb Makefile (`phase6_sim/cocotb/Makefile:11-27,83-94`)
+**d) Phase 6 masked all of this.** The cocotb Makefile (`mlp/phase6_sim/cocotb/Makefile:11-27,83-94`)
 *excludes the real FIFO modules* and substitutes `mlp_fifo_deep.v` (depth-256),
 `mlp_fifo_dual_w8.v` (replay-once), and `mlp_fifo_replay_w8.v` (replay-4×/8×). None of these
 exist in the bitstream. The PHASE6_COMPLETE justification — "in real hardware, producer and
@@ -77,11 +77,11 @@ Phase 4 ran C-sim only.
 
 Pick one of these, in order of preference:
 
-1. **Switch `io_type` to `io_stream`** in `phase4_hls/convert.py`. This is the modern, maintained
+1. **Switch `io_type` to `io_stream`** in `mlp/phase4_hls/convert.py`. This is the modern, maintained
    path: hls4ml emits a proper DATAFLOW region with rate-matched FIFOs and stream-safe dense
    implementations. Keep `Strategy: Resource` and the per-layer ReuseFactors as a starting point.
 2. **Keep `io_serial` but repair the templates** (you already maintain
-   `phase4_hls/patches/nnet_dense_resource.h`):
+   `mlp/phase4_hls/patches/nnet_dense_resource.h`):
    - At the top of each `dense_resource` variant, read the input stream exactly `n_in` times into
      a local `data_T buf[n_in]` array, then index `buf[]` inside the MAC loops. This fixes the
      512-reads-of-128 problem for config4/config6.
@@ -120,7 +120,7 @@ Then:
 ## 2. BLOCKING — `top.v` restore and the XDC LED mismatch
 
 - Working tree `top.v` is the loopback stub. The full design exists at `HEAD`
-  (`git show HEAD:phase5_fpga/hdl/top.v`).
+  (`git show HEAD:mlp/phase5_fpga/hdl/top.v`).
 - The committed full `top.v` has **no `led` port**, but the current `basys3.xdc:13-19` constrains
   `led[0..2]` (U16/E19/U19). If you restore `top.v` verbatim, Vivado throws critical warnings for
   unmatched ports and you lose the debug LEDs.
@@ -159,7 +159,7 @@ With the current IP it never will.
 ## 3. BLOCKING — Synthesis reports are stale and were measured on dead logic
 
 **Evidence:**
-- `phase5_fpga/scripts/utilization_report.txt` / `timing_report.txt`: dated **2026-05-27**.
+- `mlp/phase5_fpga/scripts/utilization_report.txt` / `timing_report.txt`: dated **2026-05-27**.
 - Commit `a842c7e` ("Fix multi-driven reg bug in mlp_controller — features_q0 was always zero"):
   **2026-05-29**.
 
@@ -343,7 +343,7 @@ fixed — that's correct and already commented.)
 |---|---|---|
 | Spread-MAE gate inconsistency: CLAUDE.md says ≤ 9.0; PHASE2_COMPLETE relaxed it to 10.5 (val MAE 9.74 beats Vegas 9.76); **no pytest enforces any absolute MAE** | `CLAUDE.md`, `tests/test_phase2.py` | Update CLAUDE.md to 10.5 with the Vegas-baseline rationale; add a val-MAE ≤ 10.5 test |
 | Win decode documented as "divide by 255" but everything implements /256 | `PHASE5_COMPLETE.md:31` | Fix the doc (code is consistent: hw `[11:4]` ≈ p×256, client `/256.0`, vectors `round(p*256)`) |
-| Duplicate MLP stubs that can drift | `phase5_fpga/hdl/myproject_stub.v`, `myproject_stub_fast.v` vs `phase6_sim/stubs/myproject_stub.v` | Keep only the phase6 one; the phase5 copies were for iverilog syntax checks |
+| Duplicate MLP stubs that can drift | `mlp/phase5_fpga/hdl/myproject_stub.v`, `myproject_stub_fast.v` vs `mlp/phase6_sim/stubs/myproject_stub.v` | Keep only the phase6 one; the phase5 copies were for iverilog syntax checks |
 | Temp debug scripts flagged for deletion in PHASE7_STATUS | `test_win.py`, `test_uart_raw.py` (repo root) | Delete before final commit (after they've served the loopback/NACK steps) |
 | `rst` (BTNC) used directly as synchronous reset without a 2-FF synchronizer | `top.v` | Low risk (sync-reset design, human-speed button), but double-flopping `rst` is one line of insurance |
 | `uart_tx.tx` powers up 0 for ~1 cycle at configuration (registers init to 0, IDLE drives 1 next cycle) | `uart_tx.v` | Harmless; host may see one garbage byte right after programming — `connect()` already flushes input. Optionally `reg tx = 1'b1;` initial value |
@@ -464,7 +464,7 @@ tolerances per-game.
 - Make `cosim_design` and "test_mlp_verilog with zero FIFO substitutions" permanent CI steps for
   any future Phase 4 re-run.
 - Add a pytest that asserts `utilization_report.txt` is newer than every file in
-  `phase5_fpga/hdl/` + `artifacts/ip_repo/` — stale-report bugs (§3) become impossible.
+  `mlp/phase5_fpga/hdl/` + `artifacts/ip_repo/` — stale-report bugs (§3) become impossible.
 - Add the multi-driven-net log grep to `run_synth.tcl` (§3).
 
 ---

@@ -19,7 +19,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-HLS_DIR = 'phase4_hls/hls_project'
+HLS_DIR = 'mlp/phase4_hls/hls_project'
 AMD_VITIS_PATH = '/mnt/c/AMDDesignTools/2025.2/Vitis/scripts/vitis_hls'
 
 
@@ -31,7 +31,7 @@ AMD_VITIS_PATH = '/mnt/c/AMDDesignTools/2025.2/Vitis/scripts/vitis_hls'
 def artifacts():
     import tensorflow as tf
     tf.config.run_functions_eagerly(True)
-    from phase3_quantization.qkeras_model import build_quantized_model, compile_quantized_model
+    from mlp.phase3_quantization.qkeras_model import build_quantized_model, compile_quantized_model
 
     meta     = json.load(open('artifacts/features.json'))
     features = meta['features']

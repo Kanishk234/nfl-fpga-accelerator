@@ -18,7 +18,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from phase7_deploy_conifer.inference.fpga_client_gbdt import (
+from gbdt.phase7_deploy.inference.fpga_client_gbdt import (
     GBDTClient, SCALE, from_fixed, pack_features, to_fixed,
 )
 
@@ -27,8 +27,8 @@ BOARD_REQUIRED = pytest.mark.skipif(
     reason="Set FPGA_PORT=COM8 to run board tests",
 )
 
-CONIFER = Path('phase7_deploy_conifer')
-CHAIN = Path('phase6_sim_conifer/chain_golden')
+CONIFER = Path('gbdt/phase7_deploy')
+CHAIN = Path('gbdt/phase6_sim/chain_golden')
 VECTORS = CONIFER / 'validation_vectors.json'
 CATALOG = CONIFER / 'games_catalog_gbdt.json'
 
@@ -230,7 +230,7 @@ def test_host_encoding_matches_chain_golden():
     the LSB on ~half the games, which would silently break board bit-exactness.
     """
     pytest.importorskip('pandas')
-    from phase7_deploy_conifer.inference.feature_builder_gbdt import GBDTFeatureBuilder
+    from gbdt.phase7_deploy.inference.feature_builder_gbdt import GBDTFeatureBuilder
 
     b = GBDTFeatureBuilder()
     words = [int(x, 16) for x in (CHAIN / 'tb_inputs.mem').read_text().split()]
@@ -245,16 +245,16 @@ def test_host_encoding_matches_chain_golden():
 # ── UI WIRING ───────────────────────────────────────────────────────────────
 
 def test_shared_index_is_model_driven():
-    """Both UIs serve phase7_deploy/ui/index.html; it must read its labels from
+    """Both UIs serve mlp/phase7_deploy/ui/index.html; it must read its labels from
     the bootstrap `model` block rather than hardcoding MLP strings."""
-    html = Path('phase7_deploy/ui/index.html').read_text(encoding='utf-8')
+    html = Path('mlp/phase7_deploy/ui/index.html').read_text(encoding='utf-8')
     assert 'MODEL.steps' in html
     assert 'modelChip' in html
     assert 'const STEPS' not in html, "pipeline labels are hardcoded again"
 
 
 def test_gbdt_ui_declares_its_model():
-    sys.path.insert(0, str(Path('phase7_deploy_conifer/ui').resolve()))
+    sys.path.insert(0, str(Path('gbdt/phase7_deploy/ui').resolve()))
     src = (CONIFER / 'ui/webapp_gbdt.py').read_text(encoding='utf-8')
     assert "'name': 'GBDT'" in src
     assert "'raw_denom': 4096" in src
@@ -264,13 +264,13 @@ def test_gbdt_ui_declares_its_model():
 
 @BOARD_REQUIRED
 def test_board_smoke():
-    from phase7_deploy_conifer.board.verify_uart_gbdt import smoke_test
+    from gbdt.phase7_deploy.board.verify_uart_gbdt import smoke_test
     assert smoke_test(os.environ['FPGA_PORT'])
 
 
 @BOARD_REQUIRED
 def test_board_bit_exact_20_games():
-    from phase7_deploy_conifer.validation.golden_vector_test_gbdt import run
+    from gbdt.phase7_deploy.validation.golden_vector_test_gbdt import run
     assert run(os.environ['FPGA_PORT'], limit=20, verbose=False)
 
 

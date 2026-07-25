@@ -3,7 +3,7 @@
 # Rewritten after the cleanup that removed the io_serial-era cocotb regression/stubs/test_vectors.
 # Verifies: the functional suite is present, the real IP is installed, the environment is sane,
 # the synthesis sign-off numbers pass, and (if a sim was run) the real-IP regression results meet
-# the same criteria as phase6_sim/functional/check_results.py.
+# the same criteria as mlp/phase6_sim/functional/check_results.py.
 
 import os
 import csv
@@ -13,8 +13,8 @@ import subprocess
 import pytest
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-FUNC = os.path.join(ROOT, 'phase6_sim', 'functional')
-COCOTB = os.path.join(ROOT, 'phase6_sim', 'cocotb')
+FUNC = os.path.join(ROOT, 'mlp/phase6_sim', 'functional')
+COCOTB = os.path.join(ROOT, 'mlp/phase6_sim', 'cocotb')
 IPV  = os.path.join(ROOT, 'artifacts', 'ip_repo', 'hdl', 'verilog')
 
 COINFLIP_BAND = 0.05    # excuse winner flips on games the model scores near 0.5
@@ -30,7 +30,7 @@ SPREAD_MAX_TOL = 3      # points
     'check_results.py', 'myproject_stub_stall.v', 'golden.csv', 'tb_inputs.mem', 'ABOUT.md',
 ])
 def test_functional_file_exists(name):
-    assert os.path.isfile(os.path.join(FUNC, name)), f"{name} missing from phase6_sim/functional/"
+    assert os.path.isfile(os.path.join(FUNC, name)), f"{name} missing from mlp/phase6_sim/functional/"
 
 
 # ── FILE EXISTENCE: cocotb UART unit tests (kept) ───────────────────────────
@@ -43,7 +43,7 @@ def test_cocotb_uart_file_exists(name):
 
 def test_obsolete_io_serial_artifacts_removed():
     # the stubs that masked the original deadlock must stay gone
-    assert not os.path.isdir(os.path.join(ROOT, 'phase6_sim', 'stubs'))
+    assert not os.path.isdir(os.path.join(ROOT, 'mlp/phase6_sim', 'stubs'))
     assert not os.path.isfile(os.path.join(COCOTB, 'test_regression.py'))
 
 
@@ -107,7 +107,7 @@ def _s8(b):
 def _load_regression():
     sim_path = os.path.join(FUNC, 'sim_results.csv')
     if not os.path.isfile(sim_path):
-        pytest.skip("run phase6_sim/functional/run_xsim.bat to produce sim_results.csv")
+        pytest.skip("run mlp/phase6_sim/functional/run_xsim.bat to produce sim_results.csv")
     golden = {int(r['game_idx']): r for r in csv.DictReader(open(os.path.join(FUNC, 'golden.csv')))}
     sim    = {int(r['game_idx']): r for r in csv.DictReader(open(sim_path))}
     return golden, sim

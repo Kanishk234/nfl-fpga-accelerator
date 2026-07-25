@@ -15,7 +15,7 @@
   because 128 × 2^-10 = 0.125. We need ≥12 fractional bits to stay safe, not necessarily 14. This saves 6 bits of width on every accumulator → roughly 20–30% LUT reduction on the
    MAC logic, no retraining required.
 
-  - Re-run python phase4_hls/convert.py (C sim only, ~2 min)
+  - Re-run python mlp/phase4_hls/convert.py (C sim only, ~2 min)
   - If mean_delta < 0.05 and max_delta < 0.10: go re-synthesize in Windows Vitis HLS
   - If C sim fails: back off to fixed<20,8> (12 frac bits, more integer range) and retry
   - Expected result: ~15,000–17,000 LUT → comfortable headroom for UART

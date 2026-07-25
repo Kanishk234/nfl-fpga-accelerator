@@ -20,15 +20,21 @@ env/
 dist/
 build/
 
-# FPGA generated outputs (huge — do not commit)
-phase4_hls/hls_project/
-phase5_fpga/vivado_project/
+# FPGA generated outputs (huge — do not commit).
+# Patterns are deliberately NOT anchored to a phase path: the mlp/ + gbdt/
+# reorg broke the old anchored versions and made ~10k generated files visible
+# at once. Match on the generated directory name instead, wherever it lives.
+**/hls_project/
+**/vivado_project/
 
 # conifer generated projects (regenerable: smoke_test.py, precision_scan.py,
-# convert_hls.py + make_tb_data.py — from the committed artifacts/gbdt models)
-phase4_conifer/smoke_*/
-phase4_conifer/scan_*/
-phase4_conifer/hls_*/
+# convert_hls.py + make_tb_data.py — from the committed artifacts/gbdt models).
+# Note `hls_*` matches hls_win/ and hls_spread/ but NOT the phase4_hls/ folder
+# itself — a path component must start with "hls_".
+**/smoke_*/
+**/scan_*/
+**/hls_win/
+**/hls_spread/
 *.so
 
 # Jupyter
@@ -44,10 +50,10 @@ notebooks/.ipynb_checkpoints/
 # artifacts/ is intentionally NOT ignored
 
 # Phase 6 simulation — generated files (all regenerable)
-phase6_sim/cocotb/sim_build/
-phase6_sim/cocotb/results*.xml
-phase6_sim/test_vectors/sim_outputs.csv
-phase6_sim/test_vectors/sim_report.csv
+**/cocotb/sim_build/
+**/cocotb/results*.xml
+**/test_vectors/sim_outputs.csv
+**/test_vectors/sim_report.csv
 
 # OS
 .DS_Store

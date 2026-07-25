@@ -12,9 +12,9 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-HDL_DIR    = REPO / "phase5_fpga" / "hdl"
-CONST_DIR  = REPO / "phase5_fpga" / "constraints"
-SCRIPT_DIR = REPO / "phase5_fpga" / "scripts"
+HDL_DIR    = REPO / "mlp/phase5_fpga" / "hdl"
+CONST_DIR  = REPO / "mlp/phase5_fpga" / "constraints"
+SCRIPT_DIR = REPO / "mlp/phase5_fpga" / "scripts"
 ARTIFACT   = REPO / "artifacts"
 
 

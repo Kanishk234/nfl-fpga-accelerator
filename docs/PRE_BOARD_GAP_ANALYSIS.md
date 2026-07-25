@@ -26,7 +26,7 @@ Severity: 🔴 high (close before board) · 🟡 medium · 🟢 low / decision.
 "Board-free?" = can be fully tested/fixed without the Basys 3.
 
 ### G1 🔴 — Host doesn't handle inference-timeout status `0x02`
-- **Where:** `phase7_deploy/inference/fpga_client.py:100-102` (`status_str = "OK" if status==0x00 else "NACK"`).
+- **Where:** `mlp/phase7_deploy/inference/fpga_client.py:100-102` (`status_str = "OK" if status==0x00 else "NACK"`).
 - **What:** In Phase 5 we added the controller watchdog → `uart_framing` response **status `0x02`**
   (§5.2). The host only knows `0x00` (OK) and `0x01` (NACK); it labels `0x02` as `"NACK"`.
 - **Why it matters:** `0x02` fires exactly in the scenario we are guarding against — the MLP not
@@ -47,7 +47,7 @@ Severity: 🔴 high (close before board) · 🟡 medium · 🟢 low / decision.
   framing doesn't emit `0x02`), we won't find out until the board hangs — defeating the net.
 - **Board-free?** Yes (iverilog with a deliberately-stalling stub).
 - **Actionable steps:**
-  1. Add `phase6_sim/functional/myproject_stub_stall.v` — an io_stream stub that consumes the input
+  1. Add `mlp/phase6_sim/functional/myproject_stub_stall.v` — an io_stream stub that consumes the input
      beat (asserts `features_TREADY`) but **never** asserts `layer9_out_TVALID`/`layer10_out_TVALID`.
   2. Add `tb_timeout.v` (controller + stalling stub), with a small `TIMEOUT_CYCLES` override (e.g.
      `#(.TIMEOUT_CYCLES(500))`) so the sim is short; assert `result_timeout` pulses and the FSM
@@ -72,7 +72,7 @@ Severity: 🔴 high (close before board) · 🟡 medium · 🟢 low / decision.
      - short read (<4 bytes) → `TimeoutError`; wrong SOF (`0xAA…`) → `RuntimeError`.
      - `compute_checksum` matches the HDL XOR for a known vector.
   2. Add an encode round-trip test: bytes built by `feature_builder` for a game == the bytes in
-     `phase6_sim/functional/tb_inputs.mem` for that game (proves host encoding == sim/golden encoding).
+     `mlp/phase6_sim/functional/tb_inputs.mem` for that game (proves host encoding == sim/golden encoding).
   3. Verify: `FPGA_PORT` unset, `pytest tests/test_phase7.py` passes with no board.
 
 ### G4 🟡 — Win saturation (`0x00` / `0xFF`) never exercised
@@ -111,7 +111,7 @@ Severity: 🔴 high (close before board) · 🟡 medium · 🟢 low / decision.
   confusing intermittent board hang.
 
 ### G7 🟢 — `reset_board()` is misleading/harmful (audit §7.1)
-- **Where:** `phase7_deploy/inference/fpga_client.py:123-132`.
+- **Where:** `mlp/phase7_deploy/inference/fpga_client.py:123-132`.
 - **What:** Sends a UART break that cannot reset the FPGA (no UART reset path) and, mid-packet,
   advances the framing FSM with `0x00` garbage.
 - **Actionable steps:** rename to `flush_host_buffers()` (drop the `send_break`; keep
@@ -128,7 +128,7 @@ Severity: 🔴 high (close before board) · 🟡 medium · 🟢 low / decision.
 ### G9 🟢 — Housekeeping (not test gaps)
 - `mlp_controller` ignores the IP's `ap_done` (gates on output capture instead) — harmless; the synth
   "unconnected `ap_done`" warning is expected. Optionally add a comment.
-- `tests/test_phase6.py` is stale (old flow, audit §6.1) — update to point at `phase6_sim/functional/`
+- `tests/test_phase6.py` is stale (old flow, audit §6.1) — update to point at `mlp/phase6_sim/functional/`
   or retire it; it is **not** part of the functional sign-off.
 
 ---
@@ -208,12 +208,12 @@ touched, and — importantly — *how each was actually verified* (not just "a t
 ### Closed gaps — files & tests
 | Gap | Implementation files | Test / evidence |
 |---|---|---|
-| G1 host `0x02` | `phase7_deploy/inference/fpga_client.py` | `tests/test_phase7.py::test_decode_timeout_status` |
+| G1 host `0x02` | `mlp/phase7_deploy/inference/fpga_client.py` | `tests/test_phase7.py::test_decode_timeout_status` |
 | G2 watchdog | (pre-existing `mlp_controller.v`/`uart_framing.v`) | `tb_timeout.v`, `tb_top_timeout.v` (→`55 00 00 02`) + neg control |
 | G3 host tests | `tests/test_phase7.py` | 22 pass (decode OK/NACK/TIMEOUT/neg-spread/short/bad-SOF + encode-consistency) |
 | G4 saturation | (pre-existing `mlp_controller.v`) | `tb_timeout.v +SAT=hi/neg/mid` |
-| G5 SOF-collision | `phase6_sim/functional/tb_top_uart.v` | all-`0xAA` features → status `0x00`; neg-spread via regression |
-| G6 RX watchdog | `phase5_fpga/hdl/uart_framing.v` (`RX_TIMEOUT_CYCLES`) | `tb_framing_resync.v` + neg control; bitstream rebuilt |
+| G5 SOF-collision | `mlp/phase6_sim/functional/tb_top_uart.v` | all-`0xAA` features → status `0x00`; neg-spread via regression |
+| G6 RX watchdog | `mlp/phase5_fpga/hdl/uart_framing.v` (`RX_TIMEOUT_CYCLES`) | `tb_framing_resync.v` + neg control; bitstream rebuilt |
 | G7 reset | `fpga_client.py` (`flush_host_buffers`), `ui/app.py` | n/a (removed UART-break) |
 | G9 housekeeping | `mlp_controller.v` (ap_done comment) | `tests/test_phase6.py` rewritten (30 pass) |
 

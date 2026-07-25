@@ -6,13 +6,13 @@
 
 | File | Status |
 |---|---|
-| `phase7_deploy/inference/fpga_client.py` | Done |
-| `phase7_deploy/inference/feature_builder.py` | Done (elo_diff/is_dome/is_div_game bugs fixed vs plan) |
-| `phase7_deploy/inference/logger.py` | Done |
-| `phase7_deploy/board/verify_uart.py` | Done (fixed JSON/CSV bug from plan) |
-| `phase7_deploy/board/program_board.py` | Done (fixed WSL2 TCL path + cmd.exe wrapper) |
-| `phase7_deploy/validation/golden_vector_test.py` | Done |
-| `phase7_deploy/ui/app.py` | Done |
+| `mlp/phase7_deploy/inference/fpga_client.py` | Done |
+| `mlp/phase7_deploy/inference/feature_builder.py` | Done (elo_diff/is_dome/is_div_game bugs fixed vs plan) |
+| `mlp/phase7_deploy/inference/logger.py` | Done |
+| `mlp/phase7_deploy/board/verify_uart.py` | Done (fixed JSON/CSV bug from plan) |
+| `mlp/phase7_deploy/board/program_board.py` | Done (fixed WSL2 TCL path + cmd.exe wrapper) |
+| `mlp/phase7_deploy/validation/golden_vector_test.py` | Done |
+| `mlp/phase7_deploy/ui/app.py` | Done |
 | `tests/test_phase7.py` | Done — 17/17 non-board tests pass |
 
 Run tests: `venv/bin/python3 -m pytest tests/test_phase7.py -v -k "not board"`
@@ -125,13 +125,13 @@ Should return `Got 4 bytes: 55000001` (SOF + zeros + NACK status).
 ### Step 4 — Smoke test
 
 ```powershell
-python \\wsl.localhost\Ubuntu\home\younix\nfl-fpga-accelerator\phase7_deploy\board\verify_uart.py COM8
+python \\wsl.localhost\Ubuntu\home\younix\nfl-fpga-accelerator\mlp/phase7_deploy\board\verify_uart.py COM8
 ```
 
 ### Step 5 — Golden vector test
 
 ```powershell
-python \\wsl.localhost\Ubuntu\home\younix\nfl-fpga-accelerator\phase7_deploy\validation\golden_vector_test.py COM8
+python \\wsl.localhost\Ubuntu\home\younix\nfl-fpga-accelerator\mlp/phase7_deploy\validation\golden_vector_test.py COM8
 ```
 Expect ≥98% pass rate (49-50/50 games).
 
@@ -146,7 +146,7 @@ FPGA_PORT=COM8 pytest tests/test_phase7.py -v
 
 Two commits:
 1. HDL fixes: `mlp_controller.v` features_q0 bug + pin assignment fix + uart_framing.v guard
-2. Python deployment layer: all phase7_deploy files + tests passing
+2. Python deployment layer: all mlp/phase7_deploy files + tests passing
 
 ---
 
@@ -154,11 +154,11 @@ Two commits:
 
 | File | What Changed |
 |---|---|
-| `phase5_fpga/hdl/mlp_controller.v` | Fixed features_q0 multi-driver bug |
-| `phase5_fpga/hdl/uart_framing.v` | !tx_start guard confirmed correct (Phase 6 change) |
-| `phase5_fpga/hdl/top.v` | Currently loopback stub — needs restoration after pin confirmed |
-| `phase5_fpga/constraints/basys3.xdc` | Currently B18=rxd, A18=txd — needs confirmation from loopback |
-| `phase7_deploy/` | All Python files written |
+| `mlp/phase5_fpga/hdl/mlp_controller.v` | Fixed features_q0 multi-driver bug |
+| `mlp/phase5_fpga/hdl/uart_framing.v` | !tx_start guard confirmed correct (Phase 6 change) |
+| `mlp/phase5_fpga/hdl/top.v` | Currently loopback stub — needs restoration after pin confirmed |
+| `mlp/phase5_fpga/constraints/basys3.xdc` | Currently B18=rxd, A18=txd — needs confirmation from loopback |
+| `mlp/phase7_deploy/` | All Python files written |
 | `tests/test_phase7.py` | Written, 17/17 non-board tests pass |
 | `requirements.txt` | Added pyserial |
 

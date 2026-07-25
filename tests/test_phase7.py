@@ -8,33 +8,33 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from phase7_deploy.inference.fpga_client import FPGAClient
-from phase7_deploy.inference.feature_builder import FeatureBuilder
+from mlp.phase7_deploy.inference.fpga_client import FPGAClient
+from mlp.phase7_deploy.inference.feature_builder import FeatureBuilder
 
 BOARD_REQUIRED = pytest.mark.skipif(
     not os.environ.get('FPGA_PORT'),
     reason="Set FPGA_PORT=COM3 (or /dev/ttyUSB0) to run board tests",
 )
 
-FUNC = 'phase6_sim/functional'   # the authoritative real-IP vectors (post-audit cleanup)
+FUNC = 'mlp/phase6_sim/functional'   # the authoritative real-IP vectors (post-audit cleanup)
 
 
 # ── FILE EXISTENCE ──────────────────────────────────────────────────────────
 
 def test_fpga_client_exists():
-    assert Path('phase7_deploy/inference/fpga_client.py').exists()
+    assert Path('mlp/phase7_deploy/inference/fpga_client.py').exists()
 
 def test_feature_builder_exists():
-    assert Path('phase7_deploy/inference/feature_builder.py').exists()
+    assert Path('mlp/phase7_deploy/inference/feature_builder.py').exists()
 
 def test_app_exists():
-    assert Path('phase7_deploy/ui/app.py').exists()
+    assert Path('mlp/phase7_deploy/ui/app.py').exists()
 
 def test_golden_vector_test_exists():
-    assert Path('phase7_deploy/validation/golden_vector_test.py').exists()
+    assert Path('mlp/phase7_deploy/validation/golden_vector_test.py').exists()
 
 def test_program_board_exists():
-    assert Path('phase7_deploy/board/program_board.py').exists()
+    assert Path('mlp/phase7_deploy/board/program_board.py').exists()
 
 
 # ── HOST DECODE / ENCODE (no board — mocked serial) ─────────────────────────

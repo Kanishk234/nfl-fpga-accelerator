@@ -18,8 +18,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from phase3_quantization.qkeras_model import build_quantized_model, compile_quantized_model
-from phase3_quantization.evaluate_quantized import evaluate_both_models
+from mlp.phase3_quantization.qkeras_model import build_quantized_model, compile_quantized_model
+from mlp.phase3_quantization.evaluate_quantized import evaluate_both_models
 
 
 # ---------------------------------------------------------------------------

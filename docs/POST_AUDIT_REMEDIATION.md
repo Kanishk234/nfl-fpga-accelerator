@@ -45,7 +45,7 @@ Only **physical board bring-up (Phase 7)** remains; it needs the board.
 ## Work by phase
 
 ### Phase 4 — HLS regeneration (`io_stream`)
-- Switched `phase4_hls/convert.py` to `io_type='io_stream'` (decision rationale below).
+- Switched `mlp/phase4_hls/convert.py` to `io_type='io_stream'` (decision rationale below).
 - Regenerated the project; **GCC C-sim passed** (mean Δ **0.0473**, max **0.0964** — unchanged,
   precision `fixed<18,6>`). Generated C++ confirms the fix: `#pragma HLS DATAFLOW` present and the
   dual-consumer `layer7_out` resolved via `nnet::clone_stream` into two copies (one per head).
@@ -78,7 +78,7 @@ Only **physical board bring-up (Phase 7)** remains; it needs the board.
   (97.4% — spread-out packing, not capacity; routed with ~17% routing util). **WNS +0.145 ns,
   hold +0.017 — timing closes at 100 MHz.**
 
-### Phase 6 — honest functional verification (`phase6_sim/functional/`)
+### Phase 6 — honest functional verification (`mlp/phase6_sim/functional/`)
 - `gen_vectors.py` → 50-game `tb_inputs.mem` + `golden.csv` (golden from the snapped inference
   model on the **quantized** inputs `byte/256` — the §6.2 fix, isolating hardware error).
 - `tb_regression_real.v` (XSIM) → `mlp_controller` + the **real** IP, 50 games.

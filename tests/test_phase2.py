@@ -27,7 +27,7 @@ def artifacts():
 
     for path in [scaler_path, model_path, feat_path]:
         if not os.path.exists(path):
-            pytest.skip(f"{path} not found — run phase2_model/train.py first")
+            pytest.skip(f"{path} not found — run mlp/phase2_model/train.py first")
 
     import keras
     model  = keras.models.load_model(model_path)

@@ -70,7 +70,7 @@ pytest tests/test_phase1.py -v
 ## Feature Improvement Campaign (What Was Tried)
 
 Features are only locked after Phase 4 (hls4ml synthesis). All candidates were
-validated with `phase2_model/eval_repeated.py` (5 seeds, mean±std) before keeping
+validated with `mlp/phase2_model/eval_repeated.py` (5 seeds, mean±std) before keeping
 or reverting. Single-run deltas below ~0.004 are noise.
 
 | Candidate | Win acc Δ | AUC Δ | MAE Δ | Verdict |

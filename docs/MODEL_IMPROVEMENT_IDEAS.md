@@ -2,7 +2,7 @@
 
 ## Results log (validated with seeded multi-run harness)
 Measurement note: single-run win accuracy has ~±0.0036 std (baseline) from random
-init/shuffling. Always judge changes with `phase2_model/eval_repeated.py` (5 seeds,
+init/shuffling. Always judge changes with `mlp/phase2_model/eval_repeated.py` (5 seeds,
 mean±std) — a delta smaller than the std is noise. `train.py` now uses a fixed seed (42)
 so the committed model is reproducible.
 

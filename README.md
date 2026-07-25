@@ -64,7 +64,7 @@ over UART, the FPGA computes the MLP in fabric, and the raw response bytes come 
 graded against the actual result:
 
 ```
-python phase7_deploy/ui/webapp.py     # → http://127.0.0.1:8713  (Windows, board on COM port)
+python mlp/phase7_deploy/ui/webapp.py     # → http://127.0.0.1:8713  (Windows, board on COM port)
 ```
 
 <div align="center">
@@ -104,7 +104,7 @@ dataflow with **RTL cosimulation as a mandatory build gate**. →
 the chip (a deprecated pragma silently ignored → weights in LUT ROM). Every subsequent step is
 attributed: BRAM binding, pragma placement, a stream-write drain mux, a DATAFLOW FIFO explosion,
 a reuse-factor mux that grows when you'd expect it to shrink. →
-[phase4_hls/PHASE4_COMPLETE.md](phase4_hls/PHASE4_COMPLETE.md)
+[mlp/phase4_hls/PHASE4_COMPLETE.md](mlp/phase4_hls/PHASE4_COMPLETE.md)
 
 **The model is honest.** Temporal splits only (train ≤2020, val 2021–22, test 2023–24), every
 rolling stat behind `.shift(1)` so game *N* never sees its own result, scaler frozen forever, and
@@ -119,8 +119,8 @@ spread MAE edges the Vegas opening line's 9.76 on held-out seasons.
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python phase1_data/pipeline.py          # nflreadpy → data/processed/games.parquet
-python phase2_model/train.py            # → artifacts/model_best.keras (already committed)
-python phase3_quantization/quantize.py  # → artifacts/model_quantized.keras
+python mlp/phase2_model/train.py            # → artifacts/model_best.keras (already committed)
+python mlp/phase3_quantization/quantize.py  # → artifacts/model_quantized.keras
 pytest tests/ -v
 ```
 
@@ -132,14 +132,14 @@ pytest tests/ -v
 
 ```bash
 # 1) synthesize — the verified IP is committed under artifacts/ip_repo/
-#    (edit the absolute paths in phase5_fpga/scripts/*.tcl for your machine)
-vivado -mode batch -source phase5_fpga/scripts/create_project.tcl
-vivado -mode batch -source phase5_fpga/scripts/run_synth.tcl
+#    (edit the absolute paths in mlp/phase5_fpga/scripts/*.tcl for your machine)
+vivado -mode batch -source mlp/phase5_fpga/scripts/create_project.tcl
+vivado -mode batch -source mlp/phase5_fpga/scripts/run_synth.tcl
 
 # 2) program top.bit via Vivado Hardware Manager, then:
-python phase7_deploy/board/verify_uart.py COM8              # smoke test
-python phase7_deploy/validation/golden_vector_test.py COM8  # 50-game bit-exact check
-python phase7_deploy/ui/webapp.py                           # web UI
+python mlp/phase7_deploy/board/verify_uart.py COM8              # smoke test
+python mlp/phase7_deploy/validation/golden_vector_test.py COM8  # 50-game bit-exact check
+python mlp/phase7_deploy/ui/webapp.py                           # web UI
 ```
 
 > [!TIP]
@@ -208,11 +208,11 @@ top.v
 |---|---|
 | [`PROJECT_DOCUMENT.md`](PROJECT_DOCUMENT.md) | **The complete technical account** — every decision, alternative, bug, and result |
 | [`AUDIT_REPORT.md`](AUDIT_REPORT.md) / [`POST_AUDIT_REMEDIATION.md`](POST_AUDIT_REMEDIATION.md) | The deadlock forensics and the fix campaign |
-| `phase1_data/` → `phase7_deploy/` | The seven phases — each with a `PHASE*_COMPLETE.md` deep-dive |
+| `phase1_data/` → `mlp/phase7_deploy/` | The seven phases — each with a `PHASE*_COMPLETE.md` deep-dive |
 | `artifacts/` | **Committed & sacred:** `model_best.keras` · `scaler.pkl` · `features.json` · verified `ip_repo/` |
-| `phase5_fpga/hdl/` | Hand-written Verilog (UART · framing · controller · top) |
-| `phase6_sim/` | cocotb unit tests + the real-IP XSIM functional regression |
-| `phase7_deploy/ui/` | Tkinter desktop app + stdlib-only web app |
+| `mlp/phase5_fpga/hdl/` | Hand-written Verilog (UART · framing · controller · top) |
+| `mlp/phase6_sim/` | cocotb unit tests + the real-IP XSIM functional regression |
+| `mlp/phase7_deploy/ui/` | Tkinter desktop app + stdlib-only web app |
 | `tests/` | pytest suites, one per phase |
 
 ## ⚖️ Honest limitations

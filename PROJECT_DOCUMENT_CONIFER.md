@@ -31,12 +31,12 @@ so the MLP originals stay byte-identical and the comparison can never be accused
 of being contaminated:
 
 ```
-phase2_gbdt/  phase4_conifer/  phase5_fpga_conifer/  phase6_sim_conifer/  phase7_deploy_conifer/
+gbdt/phase2_train/  gbdt/phase4_hls/  gbdt/phase5_fpga/  gbdt/phase6_sim/  gbdt/phase7_deploy/
 ```
 
 Where a file was genuinely unchanged it is **sourced, not copied** —
-`uart_rx.v` / `uart_tx.v` are read straight out of `phase5_fpga/hdl/`, the host
-`GameCatalog` is imported from `phase7_deploy/`, and `GBDTFeatureBuilder`
+`uart_rx.v` / `uart_tx.v` are read straight out of `mlp/phase5_fpga/hdl/`, the host
+`GameCatalog` is imported from `mlp/phase7_deploy/`, and `GBDTFeatureBuilder`
 subclasses the MLP's `FeatureBuilder`. Exactly one MLP file was modified in the
 whole track (`ui/index.html`, made model-driven rather than forked — §6).
 
@@ -206,7 +206,7 @@ re-verified every time the bundle is rebuilt, and the Windows-side tests need
 only `pyserial`.
 
 **The UI was not forked.** Rather than copy 280 lines of near-identical HTML,
-`phase7_deploy/ui/index.html` became model-driven: the header badge, pipeline
+`mlp/phase7_deploy/ui/index.html` became model-driven: the header badge, pipeline
 labels, spread precision and raw-word denominator all arrive in a `model` block
 from `/api/bootstrap`. Both servers now return a byte-identical page while
 reporting different models. This is the only MLP file the track modified, and the
