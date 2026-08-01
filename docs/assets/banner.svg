@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="NFL FPGA Accelerator — two ML models compiled into digital logic, running on an Artix-7 board">
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f1c2e"/>
+      <stop offset="55%" stop-color="#0d1728"/>
+      <stop offset="100%" stop-color="#111f1a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="60%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#76b900"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+    </linearGradient>
+    <style>
+      .t    { font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+      .m    { font-family: "SF Mono", "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace; }
+      .h1   { font-size: 60px; font-weight: 700; fill: #f2f6fb; letter-spacing: -1.5px; }
+      .sub  { font-size: 21px; fill: #9fb3c8; }
+      .chip { font-size: 15px; font-weight: 500; fill: #cfe0f0; }
+      .tag  { font-size: 14px; font-weight: 600; fill: #76b900; letter-spacing: 3px; }
+      .arr  { font-size: 17px; fill: #55708c; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="300" rx="18" fill="url(#panel)"/>
+  <rect width="1200" height="5" rx="2.5" fill="url(#accent)"/>
+
+  <g stroke="#22c55e" stroke-opacity="0.16" fill="none" stroke-width="2">
+    <path d="M980 96 h84 v40 h70"/>
+    <path d="M980 136 h44 v64 h110"/>
+    <path d="M980 176 h84 v-30 h70"/>
+    <path d="M980 216 h124 v-40 h30"/>
+  </g>
+  <g fill="#22c55e" fill-opacity="0.5">
+    <circle cx="1134" cy="136" r="4"/>
+    <circle cx="1134" cy="146" r="4"/>
+    <circle cx="1134" cy="176" r="4"/>
+    <circle cx="1134" cy="200" r="4"/>
+  </g>
+
+  <text class="t tag" x="72" y="78">PYTHON &#8594; VERILOG &#8594; SILICON</text>
+  <text class="t h1"  x="70" y="146">NFL FPGA Accelerator</text>
+  <text class="t sub" x="72" y="186">Two ML models compiled into digital logic, running on an Artix-7 board.</text>
+
+  <rect x="72" y="210" width="240" height="2" fill="url(#fade)"/>
+
+  <g class="m chip">
+    <rect x="72"  y="236" width="96"  height="36" rx="9" fill="#16273d"/>
+    <text x="120" y="255" text-anchor="middle" dy="0.35em">pandas</text>
+
+    <text class="arr" x="182" y="255" text-anchor="middle" dy="0.35em">&#8594;</text>
+
+    <rect x="196" y="236" width="152" height="36" rx="9" fill="#16273d"/>
+    <text x="272" y="255" text-anchor="middle" dy="0.35em">QKeras / XGBoost</text>
+
+    <text class="arr" x="362" y="255" text-anchor="middle" dy="0.35em">&#8594;</text>
+
+    <rect x="376" y="236" width="152" height="36" rx="9" fill="#16273d"/>
+    <text x="452" y="255" text-anchor="middle" dy="0.35em">hls4ml / conifer</text>
+
+    <text class="arr" x="542" y="255" text-anchor="middle" dy="0.35em">&#8594;</text>
+
+    <rect x="556" y="236" width="104" height="36" rx="9" fill="#16273d"/>
+    <text x="608" y="255" text-anchor="middle" dy="0.35em">Verilog</text>
+
+    <text class="arr" x="674" y="255" text-anchor="middle" dy="0.35em">&#8594;</text>
+
+    <rect x="688" y="236" width="120" height="36" rx="9" fill="#1d3a24" stroke="#76b900" stroke-width="1.5"/>
+    <text x="748" y="255" text-anchor="middle" dy="0.35em" fill="#a8e05f">Basys 3</text>
+  </g>
+</svg>

@@ -1,35 +1,59 @@
 <div align="center">
 
-# 🏈 NFL FPGA Accelerator
+<img src="docs/assets/banner.svg" width="820" alt="NFL FPGA Accelerator — Python to Verilog to silicon">
 
-Two machine-learning models that predict NFL games, running in FPGA fabric instead of on a CPU.
-
-<!-- ── HERO IMAGE ───────────────────────────────────────────────────────────
+<!-- ── HERO DEMO ────────────────────────────────────────────────────────────
      Add docs/assets/demo.gif, then delete this comment wrapper.
      See docs/assets/README.md for exactly what to capture and why it matters.
 
-<img src="docs/assets/demo.gif" width="760" alt="Selecting a game in the web UI and running it on the Basys 3">
+<img src="docs/assets/demo.gif" width="820" alt="Selecting a game in the web UI and running it on the Basys 3">
 
 ────────────────────────────────────────────────────────────────────────── -->
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![FPGA](https://img.shields.io/badge/FPGA-Artix--7%20XC7A35T-76B900)
-![timing](https://img.shields.io/badge/timing-closed%20%40%20100%20MHz-success)
-![on-board](https://img.shields.io/badge/board%20vs%20sim-bit--exact-success)
+![Python](https://img.shields.io/badge/Python-3.12-0d1728?style=flat-square&logo=python&logoColor=76b900)
+![Board](https://img.shields.io/badge/Basys_3-Artix--7_XC7A35T-0d1728?style=flat-square)
+![Timing](https://img.shields.io/badge/timing-closed_@_100_MHz-1d3a24?style=flat-square)
+![Verified](https://img.shields.io/badge/board_vs_sim-bit--exact-1d3a24?style=flat-square)
 
 </div>
 
-Train in Python, compile to Verilog, deploy on a Basys 3. The laptop sends 21 game features
-over USB-UART; the FPGA runs the whole model in fabric and returns a win probability and a
-point spread. Two complete tracks share one dataset and one locked feature set: an MLP via
-hls4ml, and a stacked GBDT via conifer.
+## What this is
 
-The football accuracy is not the point — NFL outcomes are close to a coin flip, and both
-models land where the data's noise floor is. The point is the verified path from a trained
-model down to running silicon, and the evidence at each step that the hardware computes
-exactly what the software does.
+**A football predictor that runs as a physical circuit instead of as code.**
+
+Two machine-learning models are trained in Python, then compiled all the way down into
+digital logic and loaded onto an FPGA — a chip whose wiring is reconfigurable, so the model
+stops being software and becomes actual gates on silicon. No CPU, no operating system, no
+inference library at runtime.
+
+You pick an NFL game on a web page. Its 21 features go out over a USB cable, the chip
+computes the whole model in hardware, and a few milliseconds later a win probability and a
+point spread come back.
+
+Most ML "deployment" means putting a model in a container. Here it means the multiplications
+are wires. The interesting engineering is in that translation — and in proving, at every
+stage, that the silicon produces bit-for-bit the same answer the Python did.
+
+The football accuracy is deliberately not the headline. NFL outcomes are close to a coin
+flip, and both models land exactly at the data's noise floor. What the project demonstrates
+is the verified path from `model.fit()` down to a bitstream, walked twice with two very
+different model families: a neural network via hls4ml, and a gradient-boosted forest via
+conifer, sharing one dataset and one locked feature set.
 
 ## Results
+
+<table align="center">
+<tr align="center">
+  <td><h2>100/100</h2></td>
+  <td><h2>22</h2></td>
+  <td><h2>0</h2></td>
+</tr>
+<tr align="center">
+  <td>games bit-exact on hardware<br/><sub>vs. simulation, zero tolerance</sub></td>
+  <td>clock cycles per inference<br/><sub>GBDT track, at 100 MHz</sub></td>
+  <td>DSP blocks used<br/><sub>the whole GBDT is LUTs</sub></td>
+</tr>
+</table>
 
 Both tracks were built end to end and deployed to the same board.
 
