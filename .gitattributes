@@ -2,7 +2,7 @@
 # Files are still fully visible and cloneable — this only affects the % bar.
 
 # hls4ml MLP IP — generated VHDL + Verilog from Vitis HLS, not hand-written
-artifacts/ip_repo/**        linguist-vendored
+artifacts/mlp/ip_repo/**        linguist-vendored
 
 # hls4ml library patches — modified copies of third-party C++ templates
 phase4_hls/patches/**       linguist-vendored
