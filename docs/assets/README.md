@@ -1,34 +1,25 @@
-# Assets to capture
+# Assets
 
-The README has one image slot left open. Filling it is the single highest-value change
-remaining — every well-regarded README surveyed for this rewrite (micrograd, nanoGPT,
-hyperfine, bat, lazygit, httpie, gum, neorv32, projf-explore) puts a picture of the thing
-*working* above the fold, and this project currently has none.
+## Done
 
-## 1. `demo.gif` — required, hero slot
+- `banner.svg` — README header.
+- `nfl-gdbt-demo.gif` (4.1 MB) — hero slot, GBDT bitstream. Note the filename typo
+  (`gdbt`); the README links it as spelled, so renaming it means editing the README too.
+- `nfl-mlp-demo.gif` (3.1 MB) — MLP bitstream, in the "Two bitstreams, one page" section.
 
-Uncomment the `<img>` block at the top of [`../../README.md`](../../README.md) once this
-exists.
+Both show a real prediction coming back from real hardware with the raw response word in
+frame, which is what separates them from a screenshot of any web app.
 
-**What to record:** the web UI with the board attached. Pick a game, hit Run, let the result
-land. 5–10 seconds is plenty. Target ~760 px wide.
+## Still worth capturing
 
-**What it has to show:** that a real prediction came back from real hardware. If the UI
-displays the raw response bytes, make sure that panel is in frame — the raw bytes are what
-separates this from a screenshot of any web app, and they're the whole argument of the
-project in one image.
-
-**Capture:** ScreenToGif or ShareX on Windows; `peek` or `wf-recorder` + `gifski` on Linux.
-Keep it under ~5 MB so GitHub renders it inline.
-
-## 2. `board.jpg` — strongly recommended
+### 1. `board.jpg` — strongly recommended
 
 A photo of the Basys 3 mid-run, ideally with the laptop screen showing the UI in the same
 frame. This is the one thing no diagram can fake, and it is the reason a reader believes the
-rest of the numbers. Good candidate for a second image next to the demo, or as the hero if
-the GIF proves awkward.
+rest of the numbers. Good candidate for the "The hardware" section, which currently opens
+with a diagram rather than the object itself.
 
-## 3. `staircase.png` — the best remaining technical image
+### 2. `staircase.png` — the best remaining technical image
 
 The `elo_diff` sweep described in the README's third section: 8 discrete levels with flat
 plateaus, monotonic, versus the MLP's smooth curve on the same axes.
